@@ -1,0 +1,148 @@
+/*-- scss:defaults --*/
+
+/* TODO: Customize presentation appearance by setting SCSS variables */
+/* See https://quarto.org/docs/presentations/revealjs/themes.html#customizing-themes */
+
+/*-- scss:rules --*/
+
+/* TODO: Provide custom CSS rules */
+
+/* --- header sizing + spacing --- */
+:root { 
+  --fs-header-h: 140px;              /* smaller now, just for logo/title block */
+  --brand-color: #002EFF;   /* Frankfurt blue from the logo */
+  --font-family: "Source Sans Pro", sans-serif;
+  --font-size: 26px;
+}
+
+/* Top-right floating header (title + logo) */
+#fs-header{
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  left: auto;                       /* don't stretch full width */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 22px 22px;
+  max-height: var(--fs-header-h);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: saturate(120%) blur(4px);
+  border-radius: 8px;
+  z-index: 20;                      /* LOWER than menus/overlays */
+}
+
+html,
+body,
+.reveal,
+.reveal .slides {
+  font-family: var(--font-family);
+}
+
+/* slide title in the floating header */
+#slide-title-display{
+  font-size: 1.2em;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+/* logo size (auto-scales with header height) */
+#fs-header img{
+  height: calc(var(--fs-header-h) - 24px);  /* header height minus padding */
+}
+
+/* custom slide number  */
+#custom-slide-number {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  background-color: #003366; /* Frankfurt blue */
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 600;
+  z-index: 1000;
+  opacity: 0.9;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* IMPORTANT: no extra margin-top — don't push slides down */
+.reveal .slides{
+  margin-top: 0 !important;
+}
+
+.reveal .progress span {
+  height: 100%;        /* ensure the inner bar fills the new height */
+}
+
+/* --- ensure menus/overlays are ABOVE the header --- */
+.reveal .slide-menu { z-index: 9999 !important; }
+.reveal .overlay,
+.reveal .drawer,
+.reveal .popup { z-index: 9999 !important; }
+
+.reveal .controls,
+
+.reveal .progress {
+  z-index: 200 !important;
+  height: 7px;
+  background-color: rgba(0, 0, 0, .2);
+  color: var(--brand-color);
+}
+
+/* responsive tweak: shrink header on small screens */
+@media (max-width: 900px){
+  :root { --fs-header-h: 60px; }
+
+  #slide-title-display{
+    font-size: 1em;
+    letter-spacing: 0.5px;
+  }
+}
+
+
+.reveal .slides section aside {
+  position: absolute;
+  bottom: 0.5em;    /* move closer or further from the bottom */
+  left: 0;
+  width: 100%;
+  text-align: left;   /* or left/right, as you prefer */
+  font-size: 0.5em;     /* optional: make it a bit smaller */
+}
+
+.reveal h2 {
+  margin-bottom: 1em;  /* Increase to 1.5em or 2em if you want more space */
+}
+
+.reveal .slides section.level1.center {
+  top: 320px !important;  /* smaller than 379px = higher on the screen */
+}
+
+.reveal .slides section.centered-slide {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  padding-top: 0;        /* no extra padding */
+
+  position: relative;    /* allow top offset */
+  top: -60px;            /* move slide content up; tweak -20px / -60px etc. */
+}
+
+
+.reveal .smaller {
+  font-size: 0.8em;   /* 80% of normal */
+}
+
+.reveal .much_smaller {
+  font-size: 0.6em;   /* 80% of normal */
+}
+
+.reveal .slide-menu-button {
+  margin-bottom: 10px;
+}
