@@ -12,6 +12,9 @@ permissions:
 jobs:
   render:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -21,8 +24,8 @@ jobs:
         with:
           version: "1.8.0"
 
-      - name: Render example presentation from the project root
-        run: quarto render
+      - name: Render canonical example presentation
+        run: quarto render template.qmd
 
       - name: Verify rendered output
         run: |
@@ -47,9 +50,6 @@ jobs:
           require_html_resource template.html 'reveal[^/]*\.js$'
           require_html_resource template.html 'reveal[^/]*\.css$'
 
-      - name: Verify direct document rendering
-        run: quarto render template.qmd
-
       - name: Assemble downloadable presentation
         run: |
           source tests/lib/assert.sh
@@ -57,7 +57,9 @@ jobs:
           rm -rf "$distribution"
           mkdir "$distribution"
           cp template.html "$distribution/"
+          cp template.html "$distribution/index.html"
           cp -a template_files figures "$distribution/"
+          require_file "$distribution/index.html"
 
           # Ensure every local resource referenced directly by the HTML was
           # included. Remote URLs, anchors, and inline data URLs need no file.
@@ -94,6 +96,29 @@ jobs:
           name: presentation-html
           path: presentation-html/
           if-no-files-found: error
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: presentation-html/
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: render
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish example presentation
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   generation:
     runs-on: ubuntu-latest

@@ -54,39 +54,35 @@ extension's `figures/title_background.png` default.
 Copier is not required to install the extension or use the simple Quarto
 template.
 
-## Choose a workflow
+## View the example presentation
 
-The repository supports three independent workflows:
+[`template.qmd`](template.qmd) is the canonical demonstration of the format.
+You can [view the latest rendered presentation on GitHub
+Pages](https://fs-ise.github.io/quarto-template-presentation/) without
+installing Quarto or Copier.
 
-| Goal | Command |
-| --- | --- |
-| Add the styling to an existing Quarto project | `quarto add fs-ise/quarto-template-presentation`             |
-| Create a new presentation project             | `copier copy gh:fs-ise/quarto-template-presentation my-talk` |
-| Preview this repository's example              | `quarto preview` |
-
-## Create a new presentation from the template
-
-Run this in the directory where you want Quarto to create the presentation:
+To work on the example locally, clone this repository and run:
 
 ```bash
-quarto use template fs-ise/quarto-template-presentation
+quarto preview template.qmd
 ```
 
-Follow the prompts to choose a target directory. This command creates a new
-presentation from this repository's starter document and installs the
-extension alongside it.
+The preview build is independent of Copier: CI renders `template.qmd`
+directly, publishes it to GitHub Pages, and packages its HTML and local
+resources as a downloadable artifact.
 
-## Add the extension to an existing project
+## Install the Quarto extension
 
-From the root of an existing Quarto project, run:
+Add the format and its embedded Simplemenu integration to an existing Quarto
+project:
 
 ```bash
 quarto add fs-ise/quarto-template-presentation
 ```
 
-Unlike `quarto use template`, `quarto add` installs the extension into the
-project's `_extensions/` directory without creating a new presentation. Use
-the contributed format in a `.qmd` file as follows:
+This installs the extension into the project's `_extensions/` directory
+without creating or replacing a presentation. Use it in a `.qmd` file as
+follows:
 
 ```yaml
 ---
@@ -98,6 +94,17 @@ format: fs-ise-presentation-revealjs
 
 Use level-two headings (`##`) for slides because the extension's slide level
 is fixed to level 2 by default.
+
+If you prefer Quarto's starter-template workflow, run this in the directory
+where you want Quarto to create the presentation:
+
+```bash
+quarto use template fs-ise/quarto-template-presentation
+```
+
+Follow the prompts to choose a target directory. This command creates a new
+presentation from this repository's starter document and installs the
+extension alongside it.
 
 ## Create a configurable project with Copier
 
@@ -131,7 +138,7 @@ cd my-talk
 quarto preview
 ```
 
-## Render and preview
+## Render locally
 
 From this repository's root, render the example once or start its live preview:
 
@@ -157,9 +164,9 @@ GitHub Actions renders and packages the example on every pull request and every
 push to `main`. To download it, open the repository's **Actions** tab, select a
 successful **Render presentation** run, and download the
 `presentation-html` artifact from the run's **Artifacts** section. Extract the
-archive, then open `template.html` in a browser. The artifact includes the
-reveal.js dependencies, styles, fonts, logos, and background images needed to
-view the presentation locally without running a web server.
+archive, then open `index.html` (or `template.html`) in a browser. The artifact
+includes the reveal.js dependencies, styles, fonts, logos, and background
+images needed to view the presentation locally without running a web server.
 
 ## Format options
 
