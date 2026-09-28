@@ -22,17 +22,40 @@ require_dir "$project/figures"
 require_file "$project/figures/README.md"
 
 # Copier excludes .gitkeep files by default, so the real README above keeps the
-# figures directory in a fresh project. The answers file must retain both the
-# user input and source revision required by `copier update`.
-for answer in \
-  'project_name: CI presentation' \
-  'presentation_title: A deliberately long presentation title that demonstrates clean wrapping on the cover page' \
-  'author: CI' \
-  'subtitle: Generated noninteractively'; do
-  require_grep "^${answer}$" "$project/.copier-answers.yml"
-done
-require_grep '^_src_path: .+' "$project/.copier-answers.yml"
-require_grep '^_commit: .+' "$project/.copier-answers.yml"
+# figures directory in a fresh project. Parse the answers as YAML so the test is
+# independent of serializer quoting and line-wrapping choices. The answers must
+# retain both the user input and source revision required by `copier update`.
+python - "$project/.copier-answers.yml" <<'PY'
+from pathlib import Path
+import sys
+
+import yaml
+
+answers_path = Path(sys.argv[1])
+answers = yaml.safe_load(answers_path.read_text(encoding="utf-8"))
+if not isinstance(answers, dict):
+    raise SystemExit(f"Expected a YAML mapping in {answers_path}, got {type(answers).__name__}")
+
+expected = {
+    "project_name": "CI presentation",
+    "presentation_title": (
+        "A deliberately long presentation title that demonstrates clean wrapping on the cover page"
+    ),
+    "author": "CI",
+    "subtitle": "Generated noninteractively",
+}
+for key, expected_value in expected.items():
+    actual_value = answers.get(key)
+    if actual_value != expected_value:
+        raise SystemExit(
+            f"Unexpected {key} in {answers_path}: expected {expected_value!r}, got {actual_value!r}"
+        )
+
+for key in ("_src_path", "_commit"):
+    value = answers.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise SystemExit(f"Expected non-empty string {key} in {answers_path}, got {value!r}")
+PY
 
 require_file "$project/_extensions/fs-ise-presentation/_extension.yml"
 require_file "$project/_extensions/fs-ise-presentation/title-slide.html"
