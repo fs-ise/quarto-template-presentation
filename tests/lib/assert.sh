@@ -25,6 +25,14 @@ require_grep() {
   }
 }
 
+require_not_grep() {
+  local pattern=$1 file=$2
+  if grep -Eq -- "$pattern" "$file"; then
+    printf 'ERROR: unexpected pattern %q was found in %s\n' "$pattern" "$file" >&2
+    return 1
+  fi
+}
+
 # Assert against parsed HTML rather than its serializer's choice of quote style.
 require_html_attribute_count() {
   local file=$1 tag=$2 attribute=$3 value=$4 expected=$5

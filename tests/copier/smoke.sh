@@ -15,31 +15,43 @@ copier copy --trust --defaults \
   "$repo_root" "$output_dir/project"
 
 project="$output_dir/project"
-for path in presentation.qmd _quarto.yml README.md Makefile figures .gitignore .copier-answers.yml; do
-  test -e "$project/$path"
+for path in presentation.qmd _quarto.yml README.md Makefile .gitignore .copier-answers.yml; do
+  require_file "$project/$path"
 done
+require_dir "$project/figures"
+require_file "$project/figures/README.md"
 
-test -f "$project/_extensions/fs-ise-presentation/_extension.yml"
-test -f "$project/_extensions/fs-ise-presentation/title-slide.html"
-test -f "$project/_extensions/fs-ise-presentation/figures/title_background.png"
-test -f "$project/_extensions/fs-ise-presentation/figures/fs_logo_blue.svg"
+# Copier excludes .gitkeep files by default, so the real README above keeps the
+# figures directory in a fresh project. The answers file must retain both the
+# user input and source revision required by `copier update`.
+for answer in \
+  'project_name: CI presentation' \
+  'presentation_title: A deliberately long presentation title that demonstrates clean wrapping on the cover page' \
+  'author: CI' \
+  'subtitle: Generated noninteractively'; do
+  require_grep "^${answer}$" "$project/.copier-answers.yml"
+done
+require_grep '^_src_path: .+' "$project/.copier-answers.yml"
+require_grep '^_commit: .+' "$project/.copier-answers.yml"
+
+require_file "$project/_extensions/fs-ise-presentation/_extension.yml"
+require_file "$project/_extensions/fs-ise-presentation/title-slide.html"
+require_file "$project/_extensions/fs-ise-presentation/figures/title_background.png"
+require_file "$project/_extensions/fs-ise-presentation/figures/fs_logo_blue.svg"
 require_file "$project/_extensions/fs-ise-presentation/_extensions/simplemenu/_extension.yml"
 require_file "$project/_extensions/fs-ise-presentation/_extensions/simplemenu/LICENSE"
 require_absent "$project/_extensions/simplemenu"
-if grep -q 'quarto-simplemenu' "$project/Makefile"; then
-  printf 'ERROR: generated Makefile still installs Simplemenu separately\n' >&2
-  exit 1
-fi
+require_not_grep 'quarto-simplemenu' "$project/Makefile"
 for extension in qrcode iconify; do
-  test -f "$project/_extensions/$extension/_extension.yml"
+  require_file "$project/_extensions/$extension/_extension.yml"
 done
-test ! -e "$project/copier.yml"
-test ! -e "$project/copier-template"
-test ! -e "$project/tests/copier"
+require_absent "$project/copier.yml"
+require_absent "$project/copier-template"
+require_absent "$project/tests/copier"
 
 (cd "$project" && quarto render)
 html="$project/_site/presentation.html"
-test -f "$html"
+require_file "$html"
 require_html_class "$html" quarto-title-block
 require_html_class "$html" fs-cover
 require_html_attribute_count "$html" section data-state fs-cover-active 1
@@ -58,15 +70,15 @@ done
 # Resources are copied as one directory. In particular, Quarto must not flatten
 # individual format resources into the project or rendered-site roots.
 for asset in fs_logo_blue.svg title_background.png; do
-  test -f "$project/figures/$asset"
-  test -f "$project/_site/figures/$asset"
-  test ! -e "$project/$asset"
-  test ! -e "$project/_site/$asset"
+  require_file "$project/figures/$asset"
+  require_file "$project/_site/figures/$asset"
+  require_absent "$project/$asset"
+  require_absent "$project/_site/$asset"
 done
 
 # The slide-change handler uses a stable document class rather than relying on
 # where a particular Reveal version applies its data-state class.
-grep -q 'classList.toggle' "$html"
+require_grep 'classList\.toggle' "$html"
 require_css_text "$project/_site" 'html.fs-cover-visible #fs-header'
 require_css_text "$project/_site" 'section.fs-cover .fs-cover-logo'
 require_css_text "$project/_site" '--fs-logo-width:220px'
@@ -82,11 +94,12 @@ require_reveal_slide_numbers "$html"
 # Simplemenu must be a registered Reveal plugin, not merely a filter that emits
 # dormant markup. Its shared extension defaults also keep generated projects
 # and the repository example from drifting apart.
-grep -q 'section-divs: true' "$project/_extensions/fs-ise-presentation/_extension.yml"
-grep -A1 'revealjs-plugins:' "$project/_extensions/fs-ise-presentation/_extension.yml" | grep -q simplemenu
-grep -q "<div class='menubar'><ul class='menu'></ul><div class='slide-number'></div></div>" \
+require_grep '^section-divs: true$' "$project/_extensions/fs-ise-presentation/_extension.yml"
+require_grep '^revealjs-plugins:' "$project/_extensions/fs-ise-presentation/_extension.yml"
+require_grep '^[[:space:]]*- simplemenu$' "$project/_extensions/fs-ise-presentation/_extension.yml"
+require_grep "<div class='menubar'><ul class='menu'></ul><div class='slide-number'></div></div>" \
   "$project/_extensions/fs-ise-presentation/_extension.yml"
-! grep -q 'filters:' "$project/_quarto.yml"
+require_not_grep '^[[:space:]]*filters:' "$project/_quarto.yml"
 
 # Check the referenced resources through an HTTP server, as preview/publishing
 # accesses them, rather than treating a successful render as sufficient.
@@ -116,7 +129,7 @@ source = source.replace('author: "CI"\n', 'author:\n  - "Ada Lovelace"\n  - "Gra
 path.write_text(source.replace("date: today\n", "date: today\ncover-image: figures/override.png\n", 1))
 PY
 (cd "$project" && quarto render)
-grep -q 'data-background-image="figures/override.png"' "$project/_site/presentation.html"
-grep -q '>Ada Lovelace</p>' "$project/_site/presentation.html"
-grep -q '>Grace Hopper</p>' "$project/_site/presentation.html"
-test -f "$project/_site/figures/override.png"
+require_html_attribute_count "$project/_site/presentation.html" section data-background-image figures/override.png 1
+require_grep '>Ada Lovelace</p>' "$project/_site/presentation.html"
+require_grep '>Grace Hopper</p>' "$project/_site/presentation.html"
+require_file "$project/_site/figures/override.png"
