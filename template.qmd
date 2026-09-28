@@ -1,6 +1,6 @@
 ---
-title: "Ideas into Impact"
-subtitle: "An FS-ISE presentation starter"
+title: "Ideas into Impact: A Frankfurt School Presentation"
+subtitle: "The split-view cover is supplied automatically by the extension"
 author: "Your Name"
 date: today
 format: fs-ise-presentation-revealjs

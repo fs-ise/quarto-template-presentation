@@ -1,0 +1,16 @@
+<section id="$idprefix$title-slide" class="quarto-title-block fs-cover">
+  <div
+    class="fs-cover-image"
+    role="img"
+    aria-label="Presentation cover image"
+    style="background-image: url('$if(cover-image)$$cover-image$$else$images/title_background.png$endif$');"
+  ></div>
+  <div class="fs-cover-panel">
+    <div class="fs-cover-details">
+      $if(title)$<h1 class="title">$title$</h1>$endif$
+      $if(subtitle)$<p class="subtitle">$subtitle$</p>$endif$
+      $for(author)$<p class="author">$author$</p>$endfor$
+      $if(date)$<p class="date">$date$</p>$endif$
+    </div>
+  </div>
+</section>

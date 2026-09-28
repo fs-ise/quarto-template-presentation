@@ -8,6 +8,28 @@ and slide-number elements, and presentation-friendly sizing and typography.
 See [`template.qmd`](template.qmd) for a compact, renderable presentation that
 demonstrates the format's main features.
 
+## Cover page
+
+Every presentation gets a split-view cover automatically: the packaged
+Frankfurt School image fills the left 45% and the title information is
+right-aligned in a white panel. The image is part of the extension, so it is
+installed with `quarto add`; projects do not need to copy a separate asset.
+
+To replace the image for one document, set `cover-image` in its YAML metadata.
+The path is relative to that document (or may be a project-relative path):
+
+```yaml
+---
+title: "My presentation"
+cover-image: images/my-cover.png
+format: fs-ise-presentation-revealjs
+---
+```
+
+Keep the replacement image in the presentation project so that it is available
+when the rendered deck is published. Omitting `cover-image` restores the
+extension's `images/title_background.png` default.
+
 ## Prerequisites
 
 - [Quarto](https://quarto.org/docs/get-started/) **1.8.0 or newer**, as required
@@ -125,7 +147,8 @@ and supplies these defaults from its manifest:
 | `slide-number` | `true` | Displays slide numbers. |
 | `auto-stretch` | `false` | Prevents automatic stretching of media. |
 | `slide-level` | `2` | Starts a new slide at each level-two heading. |
-| `format-resources` | `fs_logo_blue.svg` | Makes the FS logo available to rendered output. |
+| `template-partials` | `title-slide.html` | Builds the reusable split-view cover. |
+| `format-resources` | `fs_logo_blue.svg`, `images/title_background.png` | Makes the FS logo and default cover available to rendered output. |
 
 Override reveal.js options in the document YAML while retaining the extension
 format, for example:

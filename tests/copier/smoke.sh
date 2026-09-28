@@ -18,9 +18,28 @@ for path in presentation.qmd _quarto.yml README.md Makefile figures .gitignore .
 done
 
 test -f "$project/_extensions/fs-ise-presentation/_extension.yml"
+test -f "$project/_extensions/fs-ise-presentation/title-slide.html"
+test -f "$project/_extensions/fs-ise-presentation/images/title_background.png"
 test ! -e "$project/copier.yml"
 test ! -e "$project/copier-template"
 test ! -e "$project/tests/copier"
 
 (cd "$project" && quarto render)
 test -f "$project/_site/presentation.html"
+grep -q 'class="quarto-title-block fs-cover"' "$project/_site/presentation.html"
+grep -q "background-image: url('images/title_background.png')" "$project/_site/presentation.html"
+test -f "$project/_site/images/title_background.png"
+
+# A document-level image replaces the extension default without changing the
+# generated extension or adding a second copy of its assets.
+cp "$project/_extensions/fs-ise-presentation/images/title_background.png" "$project/override.png"
+python - "$project/presentation.qmd" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+source = path.read_text()
+path.write_text(source.replace("date: today\n", "date: today\ncover-image: override.png\n", 1))
+PY
+(cd "$project" && quarto render)
+grep -q "background-image: url('override.png')" "$project/_site/presentation.html"

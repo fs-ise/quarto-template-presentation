@@ -7,6 +7,8 @@ contributes:
     revealjs:
       theme: [simple,custom.scss]
       include-before-body: header.html
+      template-partials:
+        - title-slide.html
       width: 1600
       height: 900
       lazy-load: true
@@ -15,3 +17,4 @@ contributes:
       slide-level: 2
       format-resources:
         - fs_logo_blue.svg
+        - images/title_background.png
