@@ -22,7 +22,7 @@ _message_after_copy: |
 project_name:
   type: str
   help: Name of the Quarto project
-  default: My presentation
+  default: Presentation title
 
 presentation_title:
   type: str
@@ -32,7 +32,7 @@ presentation_title:
 author:
   type: str
   help: Presentation author
-  default: Your Name
+  default: Presenter Name
 
 subtitle:
   type: str
