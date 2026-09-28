@@ -124,7 +124,7 @@ done
 require_grep 'classList\.toggle' "$html"
 require_css_text "$project/_site" 'html.fs-cover-visible #fs-header'
 require_css_text "$project/_site" 'section.fs-cover .fs-cover-logo'
-require_grep 'currentSlide.appendChild(logo)' "$html"
+require_literal 'currentSlide.appendChild(logo)' "$html"
 
 # Simplemenu must be a registered Reveal plugin, not merely a filter that emits
 # dormant markup. Its shared extension defaults also keep generated projects

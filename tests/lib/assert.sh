@@ -25,6 +25,17 @@ require_grep() {
   }
 }
 
+# Use fixed-string matching when the assertion describes emitted text rather
+# than an extended regular expression. This avoids treating JavaScript and
+# HTML punctuation (for example, parentheses) as regular-expression syntax.
+require_literal() {
+  local text=$1 file=$2
+  grep -Fq -- "$text" "$file" || {
+    printf 'ERROR: literal text %q was not found in %s\n' "$text" "$file" >&2
+    return 1
+  }
+}
+
 require_not_grep() {
   local pattern=$1 file=$2
   if grep -Eq -- "$pattern" "$file"; then
