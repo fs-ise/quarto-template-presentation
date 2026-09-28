@@ -49,7 +49,7 @@ to open it.
 
 ## Visual identity
 
-![Frankfurt School logo supplied by the extension](_extensions/fs-ise-presentation/fs_logo_blue.svg){fig-alt="Frankfurt School logo in blue" width="55%"}
+![Frankfurt School logo supplied by the extension](_extensions/fs-ise-presentation/figures/fs_logo_blue.svg){fig-alt="Frankfurt School logo in blue" width="55%"}
 
 The extension packages its logo and applies FS typography, colors, header,
 progress bar, and slide numbering automatically.

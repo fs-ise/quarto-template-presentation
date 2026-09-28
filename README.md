@@ -12,7 +12,7 @@ demonstrates the format's main features.
 
 Every presentation gets a split-view cover automatically: the packaged
 Frankfurt School image fills the left 45% and the title information is
-left-aligned and vertically centered in a white panel. The image is part of the
+right-aligned and vertically centered in a white panel. The image is part of the
 extension, so it is installed with `quarto add`; projects do not need to copy a
 separate asset.
 
@@ -29,7 +29,7 @@ format: fs-ise-presentation-revealjs
 
 Keep the replacement image in the presentation project so that it is available
 when the rendered deck is published. Omitting `cover-image` restores the
-extension's `images/title_background.png` default.
+extension's `figures/title_background.png` default.
 
 ## Prerequisites
 
@@ -155,7 +155,7 @@ and supplies these defaults from its manifest:
 | `auto-stretch` | `false` | Prevents automatic stretching of media. |
 | `slide-level` | `2` | Starts a new slide at each level-two heading. |
 | `template-partials` | `title-slide.html` | Builds the reusable split-view cover. |
-| `format-resources` | `fs_logo_blue.svg`, `images/title_background.png` | Makes the FS logo and default cover available to rendered output. |
+| `format-resources` | `figures/fs_logo_blue.svg`, `figures/title_background.png` | Makes the FS logo and default cover available to rendered output. |
 
 Override reveal.js options in the document YAML while retaining the extension
 format, for example:

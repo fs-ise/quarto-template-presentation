@@ -60,7 +60,12 @@ jobs:
           quarto use template "$GITHUB_WORKSPACE" --no-prompt
           test -f template.qmd
           test -d _extensions/fs-ise-presentation
+          test -f _extensions/fs-ise-presentation/figures/title_background.png
           test ! -e _quarto.yml
           test ! -e copier.yml
           test ! -e copier-template
           test ! -e tests/copier
+          quarto render template.qmd
+          test -f template.html
+          test -f figures/title_background.png
+          grep -q 'src="figures/title_background.png"' template.html

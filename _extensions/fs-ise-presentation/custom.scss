@@ -51,33 +51,39 @@
 
 .reveal .slides section.fs-cover .fs-cover-details {
   width: 100%;
-  text-align: left;
+  min-width: 0;
+  text-align: right;
 }
 
 .reveal .slides section.fs-cover h1.title {
   margin: 0 0 0.45em;
   color: #000000;
   font-family: var(--font-family);
-  font-size: 2.1em;
+  font-size: 2.1rem;
   font-weight: 700;
-  line-height: 1.08;
-  overflow-wrap: break-word;
-  text-align: left;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  text-align: right;
 }
 
 .reveal .slides section.fs-cover .subtitle {
   margin: 0 0 1.4em;
   color: #000000;
-  font-size: 1.15em;
+  font-size: 1.15rem;
   line-height: 1.3;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .reveal .slides section.fs-cover .author,
 .reveal .slides section.fs-cover .date {
   margin: 0.2em 0 0;
   color: #000000;
-  font-size: 0.85em;
+  font-size: 0.95rem;
   line-height: 1.25;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 /* The floating logo remains on content slides and disappears only while the

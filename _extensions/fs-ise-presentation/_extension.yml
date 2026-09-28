@@ -16,5 +16,5 @@ contributes:
       auto-stretch: false
       slide-level: 2
       format-resources:
-        - fs_logo_blue.svg
-        - images/title_background.png
+        - figures/fs_logo_blue.svg
+        - figures/title_background.png
