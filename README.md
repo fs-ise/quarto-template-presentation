@@ -70,7 +70,7 @@ Copier prompts for a project name, presentation title, author, and optional
 subtitle:
 
 ```bash
-copier copy gh:fs-ise/quarto-template-presentation my-talk
+copier copy --trust gh:fs-ise/quarto-template-presentation my-talk
 cd my-talk
 quarto render
 ```
