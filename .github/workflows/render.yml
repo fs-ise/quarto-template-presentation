@@ -20,11 +20,14 @@ jobs:
         with:
           version: "1.8.0"
 
-      - name: Render example presentation
-        run: quarto render template.qmd --to fs-ise-presentation-revealjs
+      - name: Render example presentation from the project root
+        run: quarto render
 
       - name: Verify rendered output
         run: test -f template.html
+
+      - name: Verify direct document rendering
+        run: quarto render template.qmd
 
   generation:
     runs-on: ubuntu-latest
@@ -57,6 +60,7 @@ jobs:
           quarto use template "$GITHUB_WORKSPACE" --no-prompt
           test -f template.qmd
           test -d _extensions/fs-ise-presentation
+          test ! -e _quarto.yml
           test ! -e copier.yml
           test ! -e copier-template
           test ! -e tests/copier

@@ -22,5 +22,5 @@ test ! -e "$project/copier.yml"
 test ! -e "$project/copier-template"
 test ! -e "$project/tests/copier"
 
-(cd "$project" && quarto render presentation.qmd)
+(cd "$project" && quarto render)
 test -f "$project/_site/presentation.html"

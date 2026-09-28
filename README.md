@@ -2,7 +2,7 @@
 
 `fs-ise-presentation` is a reusable [Quarto](https://quarto.org/) extension for
 building Frankfurt School ISE presentations with reveal.js. It provides the
-FS visual identity, a responsive logo and slide-title header, branded progress
+FS visual identity, a responsive logo header, branded progress
 and slide-number elements, and presentation-friendly sizing and typography.
 
 See [`template.qmd`](template.qmd) for a compact, renderable presentation that
@@ -27,6 +27,7 @@ The repository supports three independent workflows:
 | --- | --- |
 | Add the styling to an existing Quarto project | `quarto add fs-ise/quarto-template-presentation`             |
 | Create a new presentation project             | `copier copy gh:fs-ise/quarto-template-presentation my-talk` |
+| Preview this repository's example              | `quarto preview` |
 
 ## Create a new presentation from the template
 
@@ -85,21 +86,24 @@ To preview while editing:
 
 ```bash
 cd my-talk
-quarto preview presentation.qmd
+quarto preview
 ```
 
 ## Render and preview
 
-Render a presentation once:
+From this repository's root, render the example once or start its live preview:
 
 ```bash
-quarto render presentation.qmd
+quarto render template.qmd
+quarto preview
 ```
 
-Start a local preview that refreshes when source files change:
+In a Copier-generated project's root, the project configuration selects
+`presentation.qmd`, so the equivalent commands are:
 
 ```bash
-quarto preview presentation.qmd
+quarto render
+quarto preview
 ```
 
 Both commands write reveal.js HTML using the format selected in the document
@@ -115,7 +119,6 @@ and supplies these defaults from its manifest:
 | --- | --- | --- |
 | `theme` | `[simple, custom.scss]` | Uses reveal.js's Simple theme plus the FS-ISE styles. |
 | `include-before-body` | `header.html` | Adds the branded presentation header. |
-| `include-after-body` | `header.js` | Updates the header as slides change. |
 | `width` | `1600` | Sets the logical slide width. |
 | `height` | `900` | Sets the logical slide height. |
 | `lazy-load` | `true` | Lazily loads supported media. |

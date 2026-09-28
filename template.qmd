@@ -6,7 +6,7 @@ date: today
 format: fs-ise-presentation-revealjs
 ---
 
-## A focused story {.firstIntro}
+## A focused story
 
 Use this template to communicate one clear idea.
 
@@ -71,7 +71,7 @@ compound_growth(1_000, 0.05, 3)
 Code is syntax-highlighted without executing it, so this example has no
 runtime or data dependencies.
 
-## Your next step {.centered-slide}
+## Your next step
 
 Edit the metadata, replace the examples, and keep each slide focused.
 
