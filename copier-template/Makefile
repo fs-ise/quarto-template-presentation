@@ -2,7 +2,6 @@
 
 install:
 	quarto add fs-ise/quarto-template-presentation --no-prompt
-	quarto add martinomagnifico/quarto-simplemenu --no-prompt
 	quarto add jmbuhr/quarto-qrcode --no-prompt
 	quarto add mcanouil/quarto-iconify --no-prompt
 

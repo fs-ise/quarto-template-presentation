@@ -8,13 +8,15 @@ and slide-number elements, and presentation-friendly sizing and typography.
 See [`template.qmd`](template.qmd) for a compact, renderable presentation that
 demonstrates the format's main features.
 
-The repository example also uses
-[Simplemenu](https://github.com/martinomagnifico/quarto-simplemenu). After
-cloning the repository, install that filter once with
-`quarto add martinomagnifico/quarto-simplemenu --no-prompt`; the project
-configuration then renders its Introduction, Formatting, and Examples groups
-as the navigation menu. Simplemenu is registered as a reveal.js plugin by the
-presentation extension; documents should not also add it to `filters`.
+The extension embeds
+[Simplemenu](https://github.com/martinomagnifico/quarto-simplemenu) using
+Quarto's nested `_extensions` mechanism. It is installed atomically with the
+FS extension, so neither this repository nor a consuming project needs a
+second `quarto add` command. The project configuration renders its
+Introduction, Formatting, and Examples groups as the navigation menu.
+Simplemenu is registered as a reveal.js plugin by the presentation extension;
+documents should not also add it to `filters`. The embedded source retains its
+upstream MIT license and attribution.
 
 ## Cover page
 
@@ -110,11 +112,10 @@ quarto render
 
 Approve the trusted template task when prompted. From the generated project's
 directory, it runs noninteractive `quarto add` commands to install the
-published `fs-ise-presentation` extension as well as
-[Simplemenu](https://github.com/martinomagnifico/quarto-simplemenu),
-[QRcode](https://github.com/jmbuhr/quarto-qrcode), and
-[Iconify](https://github.com/mcanouil/quarto-iconify) into `_extensions/`.
-Simplemenu is configured once in the presentation extension as a bottom menu
+published `fs-ise-presentation` extension as well as the separate
+[QRcode](https://github.com/jmbuhr/quarto-qrcode) and
+[Iconify](https://github.com/mcanouil/quarto-iconify) extensions. Simplemenu
+is embedded in `fs-ise-presentation` and is configured there as a bottom menu
 and automatically derives its links from level-one slide sections. The same
 settings therefore apply to the repository example and generated projects,
 without duplicate document or project configuration. Third-party sources are
@@ -220,14 +221,14 @@ to use the same extension version everywhere.
 ### Update a Copier-generated project
 
 The Quarto extensions and Copier scaffolding have separate update lifecycles.
-From the generated project's root, update all four installed extensions with:
+From the generated project's root, update all three top-level extensions with:
 
 ```bash
 quarto update extension --all
 ```
 
-You can instead update one dependency by naming its repository, for example
-`quarto update extension martinomagnifico/quarto-simplemenu`.
+Updating `fs-ise-presentation` also updates its embedded Simplemenu dependency;
+Simplemenu is deliberately not managed as a separate top-level extension.
 
 Update generated support files from this Copier template with:
 
@@ -240,7 +241,6 @@ merges scaffold changes with local changes. In addition, `presentation.qmd` is
 marked to be skipped on updates so scaffold refreshes do not overwrite slide
 content. Review and commit update results as usual. The generated Makefile
 provides the equivalent `make update-extension` and `make update-template`
-shortcuts. The additional extensions and Simplemenu configuration belong only
-to Copier-generated projects: `quarto use template` and `quarto add` retain
-their existing, independent behavior and install only the files requested by
-those commands.
+shortcuts. QRcode and Iconify are Copier-only additions. Both `quarto use
+template` and `quarto add` install the FS extension together with its embedded
+Simplemenu dependency and do not require Copier.

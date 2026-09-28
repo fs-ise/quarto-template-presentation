@@ -4,7 +4,6 @@ _skip_if_exists:
   - presentation.qmd
 _tasks:
   - quarto add fs-ise/quarto-template-presentation --no-prompt
-  - quarto add martinomagnifico/quarto-simplemenu --no-prompt
   - quarto add jmbuhr/quarto-qrcode --no-prompt
   - quarto add mcanouil/quarto-iconify --no-prompt
 _message_after_copy: |

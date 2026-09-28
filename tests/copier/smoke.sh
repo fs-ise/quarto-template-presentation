@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+# shellcheck source=../lib/assert.sh
+source "$repo_root/tests/lib/assert.sh"
 output_dir=$(mktemp -d)
 trap 'rm -rf "$output_dir"' EXIT
 
@@ -21,7 +23,14 @@ test -f "$project/_extensions/fs-ise-presentation/_extension.yml"
 test -f "$project/_extensions/fs-ise-presentation/title-slide.html"
 test -f "$project/_extensions/fs-ise-presentation/figures/title_background.png"
 test -f "$project/_extensions/fs-ise-presentation/figures/fs_logo_blue.svg"
-for extension in simplemenu qrcode iconify; do
+require_file "$project/_extensions/fs-ise-presentation/_extensions/simplemenu/_extension.yml"
+require_file "$project/_extensions/fs-ise-presentation/_extensions/simplemenu/LICENSE"
+require_absent "$project/_extensions/simplemenu"
+if grep -q 'quarto-simplemenu' "$project/Makefile"; then
+  printf 'ERROR: generated Makefile still installs Simplemenu separately\n' >&2
+  exit 1
+fi
+for extension in qrcode iconify; do
   test -f "$project/_extensions/$extension/_extension.yml"
 done
 test ! -e "$project/copier.yml"

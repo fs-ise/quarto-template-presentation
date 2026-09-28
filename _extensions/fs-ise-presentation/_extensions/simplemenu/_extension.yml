@@ -1,0 +1,11 @@
+title: Simplemenu
+author: Martin Donath
+version: 2.0.0
+quarto-required: ">=1.2.0"
+contributes:
+  revealjs-plugins:
+    - name: Simplemenu
+      script:
+        - simplemenu.js
+      stylesheet:
+        - simplemenu.css

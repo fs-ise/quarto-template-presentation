@@ -21,15 +21,12 @@ jobs:
         with:
           version: "1.8.0"
 
-      - name: Install Simplemenu
-        run: quarto add martinomagnifico/quarto-simplemenu --no-prompt
-
       - name: Render example presentation from the project root
         run: quarto render
 
       - name: Verify rendered output
         run: |
-          set -euo pipefail
+          source tests/lib/assert.sh
           test -f template.html
           grep -q 'class="fs-cover-logo"' template.html
           grep -q -- '--fs-logo-width: 220px' template.html
@@ -52,7 +49,7 @@ jobs:
 
       - name: Assemble downloadable presentation
         run: |
-          set -euo pipefail
+          source tests/lib/assert.sh
           distribution=presentation-html
           rm -rf "$distribution"
           mkdir "$distribution"
@@ -114,29 +111,8 @@ jobs:
       - name: Install Copier
         run: python -m pip install copier
 
+      - name: Test clean Quarto add and use-template installations
+        run: tests/install/smoke.sh
+
       - name: Generate and render a Copier project
         run: tests/copier/smoke.sh
-
-      - name: Verify the Quarto template excludes Copier files
-        shell: bash
-        run: |
-          set -euo pipefail
-          output=$(mktemp -d)
-          cd "$output"
-          quarto use template "$GITHUB_WORKSPACE" --no-prompt
-          quarto add martinomagnifico/quarto-simplemenu --no-prompt
-          test -f template.qmd
-          test -d _extensions/fs-ise-presentation
-          test -f _extensions/fs-ise-presentation/figures/title_background.png
-          test ! -e _quarto.yml
-          test ! -e copier.yml
-          test ! -e copier-template
-          test ! -e tests/copier
-          quarto render template.qmd
-          test -f template.html
-          test -f figures/fs_logo_blue.svg
-          test -f figures/title_background.png
-          test ! -e fs_logo_blue.svg
-          test ! -e title_background.png
-          grep -q 'data-background-image="figures/title_background.png"' template.html
-          grep -q 'src="figures/fs_logo_blue.svg"' template.html
