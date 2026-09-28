@@ -3,13 +3,10 @@ _answers_file: .copier-answers.yml
 _skip_if_exists:
   - presentation.qmd
 _tasks:
-  - command: >-
-      cd "{{ _copier_conf.dst_path }}" &&
-      quarto add fs-ise/quarto-template-presentation --no-prompt &&
-      quarto add martinomagnifico/quarto-simplemenu --no-prompt &&
-      quarto add jmbuhr/quarto-qrcode --no-prompt &&
-      quarto add mcanouil/quarto-iconify --no-prompt
-    when: "{{ _copier_operation == 'copy' }}"
+  - quarto add fs-ise/quarto-template-presentation --no-prompt
+  - quarto add martinomagnifico/quarto-simplemenu --no-prompt
+  - quarto add jmbuhr/quarto-qrcode --no-prompt
+  - quarto add mcanouil/quarto-iconify --no-prompt
 _message_after_copy: |
   {{ '\033[1;32m' }}✓ Presentation "{{ presentation_title }}" created successfully!{{ '\033[0m' }}
 
