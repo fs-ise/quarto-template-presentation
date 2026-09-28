@@ -147,6 +147,16 @@ quarto preview
 Both commands write reveal.js HTML using the format selected in the document
 metadata.
 
+## Download the rendered example
+
+GitHub Actions renders and packages the example on every pull request and every
+push to `main`. To download it, open the repository's **Actions** tab, select a
+successful **Render presentation** run, and download the
+`presentation-html` artifact from the run's **Artifacts** section. Extract the
+archive, then open `template.html` in a browser. The artifact includes the
+reveal.js dependencies, styles, fonts, logos, and background images needed to
+view the presentation locally without running a web server.
+
 ## Format options
 
 The extension inherits all

@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,13 +29,65 @@ jobs:
 
       - name: Verify rendered output
         run: |
+          set -euo pipefail
           test -f template.html
           grep -q 'class="fs-cover-logo"' template.html
           grep -q 'left: 6%' template.html
           test "$(grep -c 'src="figures/fs_logo_blue.svg"' template.html)" -eq 2
+          test -f figures/fs_logo_blue.svg
+          test -f figures/title_background.png
+          test -d template_files
+          find template_files -type f -name 'reveal.js' -print -quit | grep -q .
+          find template_files -type f -name '*.css' -print -quit | grep -q .
+          find template_files -type f -name '*.js' -print -quit | grep -q .
 
       - name: Verify direct document rendering
         run: quarto render template.qmd
+
+      - name: Assemble downloadable presentation
+        run: |
+          set -euo pipefail
+          distribution=presentation-html
+          rm -rf "$distribution"
+          mkdir "$distribution"
+          cp template.html "$distribution/"
+          cp -a template_files figures "$distribution/"
+
+          # Ensure every local resource referenced directly by the HTML was
+          # included. Remote URLs, anchors, and inline data URLs need no file.
+          python - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import unquote, urlsplit
+
+          root = Path("presentation-html")
+
+          class Resources(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.paths = set()
+
+              def handle_starttag(self, _tag, attrs):
+                  values = dict(attrs)
+                  for name in ("src", "href", "data-background-image"):
+                      value = values.get(name, "")
+                      parsed = urlsplit(value)
+                      if value and not parsed.scheme and not parsed.netloc and not value.startswith(("#", "//")):
+                          self.paths.add(unquote(parsed.path))
+
+          parser = Resources()
+          parser.feed((root / "template.html").read_text(encoding="utf-8"))
+          missing = sorted(path for path in parser.paths if path and not (root / path).is_file())
+          if missing:
+              raise SystemExit("Missing local HTML resources: " + ", ".join(missing))
+          PY
+
+      - name: Upload presentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: presentation-html
+          path: presentation-html/
+          if-no-files-found: error
 
   generation:
     runs-on: ubuntu-latest
