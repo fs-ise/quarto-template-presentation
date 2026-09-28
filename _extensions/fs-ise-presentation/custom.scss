@@ -28,6 +28,27 @@
   box-sizing: border-box;
 }
 
+/* The cover uses the same logo asset as the ordinary-slide header, but places
+   it directly on the full-bleed artwork with a 96px inset on the 1600px
+   design canvas. */
+.reveal .slides section.fs-cover .fs-cover-logo {
+  position: absolute;
+  top: 60px;
+  left: 6%;
+  width: 220px;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  z-index: 1;
+}
+
 .reveal .slides section.fs-cover .fs-cover-details {
   display: flex;
   flex-direction: column;

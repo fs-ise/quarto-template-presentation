@@ -24,7 +24,11 @@ jobs:
         run: quarto render
 
       - name: Verify rendered output
-        run: test -f template.html
+        run: |
+          test -f template.html
+          grep -q 'class="fs-cover-logo"' template.html
+          grep -q 'left: 6%' template.html
+          test "$(grep -c 'src="figures/fs_logo_blue.svg"' template.html)" -eq 2
 
       - name: Verify direct document rendering
         run: quarto render template.qmd

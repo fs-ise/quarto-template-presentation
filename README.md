@@ -13,8 +13,10 @@ demonstrates the format's main features.
 Every presentation gets a full-bleed cover automatically: the packaged
 Frankfurt School image fills the complete 1600 × 900 slide without distortion,
 and the title information is left-aligned and vertically centered over its
-lighter right-hand area. The image is part of the extension, so it is installed
-with `quarto add`; projects do not need to supply a separate asset.
+lighter right-hand area. The Frankfurt School logo sits directly on that
+background at the upper left; the floating logo header remains exclusive to
+ordinary slides. Both assets are part of the extension, so they are installed
+with `quarto add`; projects do not need to supply separate assets.
 
 To replace the image for one document, set `cover-image` in its YAML metadata.
 The path is relative to that document (or may be a project-relative path):

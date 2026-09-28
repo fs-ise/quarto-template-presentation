@@ -36,7 +36,8 @@ grep -q 'data-state="fs-cover-active"' "$html"
 grep -q 'data-background-image="figures/title_background.png"' "$html"
 grep -q 'data-background-size="cover"' "$html"
 grep -q 'data-background-position="center"' "$html"
-grep -q 'src="figures/fs_logo_blue.svg"' "$html"
+grep -q 'class="fs-cover-logo"' "$html"
+test "$(grep -c 'src="figures/fs_logo_blue.svg"' "$html")" -eq 2
 grep -q 'class="menubar"' "$html"
 
 # Resources are copied as one directory. In particular, Quarto must not flatten
@@ -48,9 +49,12 @@ for asset in fs_logo_blue.svg title_background.png; do
   test ! -e "$project/_site/$asset"
 done
 
-# Reveal's slide state suppresses both numbering implementations and the logo
-# on the cover; the defaults remain present for every ordinary slide.
+# Reveal's slide state suppresses both numbering implementations and the
+# floating header on the cover; the defaults remain on every ordinary slide.
 grep -q 'html.fs-cover-active #fs-header' "$html"
+grep -q 'section.fs-cover .fs-cover-logo' "$html"
+grep -q 'left: 6%' "$html"
+grep -q 'width: 220px' "$html"
 grep -q 'html.fs-cover-active .slide-number' "$html"
 grep -q 'html.fs-cover-active #custom-slide-number' "$html"
 grep -Eq 'slideNumber: (true|"c/?t?")' "$html"
