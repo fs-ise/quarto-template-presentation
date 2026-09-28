@@ -1,2 +1,4 @@
 /.quarto/
 **/*.quarto_ipynb
+/template.html
+/template_files/

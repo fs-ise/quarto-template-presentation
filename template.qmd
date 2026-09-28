@@ -1,16 +1,92 @@
 ---
-title: Untitled
-format:
-  fs-ise-presentation-revealjs: default
-author: Gerit Wagner
-date: last-modified
+title: "Ideas into Impact"
+subtitle: "An FS-ISE presentation starter"
+author: "Your Name"
+date: today
+format: fs-ise-presentation-revealjs
 ---
 
-## Introduction
+## A focused story {.firstIntro}
 
-*TODO* Create an example file that demonstrates the formatting and features of your format.
+Use this template to communicate one clear idea.
 
-## More Information
+::: {.incremental}
+- Begin with the question your audience cares about.
+- Support the answer with evidence.
+- Finish with a concrete next step.
+:::
 
-You can learn more about controlling the appearance of RevealJS output here: <https://quarto.org/docs/presentations/revealjs/>
+::: {.notes}
+Speaker notes are visible in presenter view. Press **S** during a presentation
+to open it.
+:::
 
+## Two perspectives
+
+:::: {.columns}
+::: {.column width="50%"}
+**The opportunity**
+
+- Frame the current situation.
+- Make the benefit specific.
+- Keep the message concise.
+:::
+
+::: {.column width="50%"}
+**The response**
+
+1. Test a small intervention.
+2. Measure a useful outcome.
+3. Learn and iterate.
+:::
+::::
+
+## Visual identity
+
+![Frankfurt School logo supplied by the extension](_extensions/fs-ise-presentation/fs_logo_blue.svg){fig-alt="Frankfurt School logo in blue" width="55%"}
+
+The extension packages its logo and applies FS typography, colors, header,
+progress bar, and slide numbering automatically.
+
+## A model in one line
+
+For observations $y_i$ and predictions $\hat{y}_i$, mean squared error is
+
+$$
+\operatorname{MSE} = \frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2.
+$$
+
+Inline notation such as $n \ge 1$ works alongside display mathematics.
+
+## Reproducible snippets
+
+```python
+def compound_growth(principal, rate, years):
+    """Return the future value under annual compounding."""
+    return principal * (1 + rate) ** years
+
+compound_growth(1_000, 0.05, 3)
+```
+
+Code is syntax-highlighted without executing it, so this example has no
+runtime or data dependencies.
+
+## Your next step {.centered-slide}
+
+Edit the metadata, replace the examples, and keep each slide focused.
+
+::: {.smaller}
+Render with `quarto render template.qmd` or develop interactively with
+`quarto preview template.qmd`.
+:::
+
+## Charts
+
+```{mermaid}
+flowchart LR
+    A[Christmas] -->|Get money| B(Go shopping)
+    B --> C{Let me think}
+    C -->|One| D[Laptop]
+    C -->|Two| E[iPhone]
+    C -->|Three| F[fa:fa-car Car]
+```
