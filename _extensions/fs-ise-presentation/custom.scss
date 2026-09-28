@@ -117,17 +117,16 @@ html.fs-cover-visible .menubar {
   display: none !important;
 }
 
-/* The shared header is moved into the active slide by header.html. Keeping it
-   inside Reveal's canvas makes it scale with the slide rather than the browser
-   viewport. The reserved column prevents every kind of flow content (not just
-   headings) from entering the logo area. */
+/* The shared header is mounted once as a direct child of Reveal's complete
+   1600 x 900 slide canvas. The reserved column prevents every kind of flow
+   content (not just headings) from entering the logo area. */
 .reveal .slides section:not(.stack):not(.fs-cover) {
   box-sizing: border-box;
   padding-right: var(--fs-logo-clearance) !important;
 }
 
 /* Top-right decorative logo */
-#fs-header{
+.reveal .slides > #fs-header {
   position: absolute;
   top: var(--fs-edge-inset);
   right: var(--fs-edge-inset);
@@ -141,7 +140,7 @@ html.fs-cover-visible .menubar {
   box-shadow: none;
   backdrop-filter: none;
   pointer-events: none;
-  z-index: 1;
+  z-index: 30;
 }
 
 html,
@@ -152,7 +151,7 @@ body,
 }
 
 /* Match the visible cover-logo size without distorting either asset. */
-#fs-header img{
+.reveal .slides > #fs-header img {
   display: block;
   width: 100%;
   height: auto;

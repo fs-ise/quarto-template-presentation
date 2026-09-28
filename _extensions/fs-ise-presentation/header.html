@@ -5,16 +5,25 @@
   (() => {
     const coverClass = "fs-cover-visible";
     const logo = document.getElementById("fs-header");
+    let logoMounted = false;
 
     const syncCoverState = (event) => {
       const currentSlide = event?.currentSlide || window.Reveal?.getCurrentSlide();
-      if (currentSlide && !currentSlide.classList.contains("fs-cover")) {
-        currentSlide.appendChild(logo);
-      }
       document.documentElement.classList.toggle(
         coverClass,
         Boolean(currentSlide?.classList.contains("fs-cover"))
       );
+    };
+
+    const initializeLogo = (event) => {
+      if (!logoMounted) {
+        const slideCanvas = document.querySelector(".reveal .slides");
+        if (slideCanvas) {
+          slideCanvas.appendChild(logo);
+          logoMounted = true;
+        }
+      }
+      syncCoverState(event);
     };
 
     const bindReveal = () => {
@@ -23,9 +32,13 @@
         return;
       }
 
-      Reveal.on("ready", syncCoverState);
+      Reveal.on("ready", initializeLogo);
       Reveal.on("slidechanged", syncCoverState);
-      syncCoverState();
+      if (Reveal.isReady?.()) {
+        initializeLogo();
+      } else {
+        syncCoverState();
+      }
     };
 
     bindReveal();

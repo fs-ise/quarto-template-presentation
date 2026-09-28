@@ -38,6 +38,9 @@ verify_extension() {
   # state is active, so ordinary slides retain Reveal's slide number.
   require_css_text "${html%.html}_files" 'html.fs-cover-visible .slide-number'
   require_grep 'currentSlide\?\.classList\.contains\("fs-cover"\)' "$extension/header.html"
+  require_literal 'slideCanvas.appendChild(logo)' "$extension/header.html"
+  require_not_grep 'currentSlide\.appendChild\(logo\)' "$extension/header.html"
+  require_css_text "${html%.html}_files" '.reveal .slides>#fs-header'
   require_file "$project/figures/fs_logo_blue.svg"
   require_file "$project/figures/title_background.png"
 }
