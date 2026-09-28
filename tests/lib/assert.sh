@@ -24,3 +24,117 @@ require_grep() {
     return 1
   }
 }
+
+# Assert against parsed HTML rather than its serializer's choice of quote style.
+require_html_attribute_count() {
+  local file=$1 tag=$2 attribute=$3 value=$4 expected=$5
+  python - "$file" "$tag" "$attribute" "$value" "$expected" <<'PY'
+from html.parser import HTMLParser
+from pathlib import Path
+import sys
+
+file, wanted_tag, wanted_attribute, wanted_value, expected = sys.argv[1:]
+
+class Counter(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.count = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag == wanted_tag and dict(attrs).get(wanted_attribute) == wanted_value:
+            self.count += 1
+
+parser = Counter()
+parser.feed(Path(file).read_text(encoding="utf-8"))
+if parser.count != int(expected):
+    raise SystemExit(
+        f"ERROR: expected {expected} <{wanted_tag}> element(s) with "
+        f"{wanted_attribute}={wanted_value!r} in {file}, found {parser.count}"
+    )
+PY
+}
+
+require_html_class() {
+  local file=$1 class_name=$2
+  python - "$file" "$class_name" <<'PY'
+from html.parser import HTMLParser
+from pathlib import Path
+import sys
+
+file, wanted = sys.argv[1:]
+
+class Classes(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.matches = 0
+
+    def handle_starttag(self, _tag, attrs):
+        if wanted in dict(attrs).get("class", "").split():
+            self.matches += 1
+
+parser = Classes()
+parser.feed(Path(file).read_text(encoding="utf-8"))
+if not parser.matches:
+    raise SystemExit(f"ERROR: HTML class {wanted!r} was not found in {file}")
+PY
+}
+
+# Verify that an HTML document references a matching local resource and that
+# the referenced file was actually emitted beside it.
+require_html_resource() {
+  local file=$1 pattern=$2
+  python - "$file" "$pattern" <<'PY'
+from html.parser import HTMLParser
+from pathlib import Path
+from urllib.parse import unquote, urlsplit
+import re
+import sys
+
+file, pattern = sys.argv[1:]
+document = Path(file)
+
+class Resources(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.paths = []
+
+    def handle_starttag(self, _tag, attrs):
+        values = dict(attrs)
+        for attribute in ("src", "href"):
+            value = values.get(attribute, "")
+            parsed = urlsplit(value)
+            if value and not parsed.scheme and not parsed.netloc and not value.startswith(("#", "//")):
+                self.paths.append(unquote(parsed.path))
+
+parser = Resources()
+parser.feed(document.read_text(encoding="utf-8"))
+matches = [path for path in parser.paths if re.search(pattern, path, re.IGNORECASE)]
+existing = [path for path in matches if (document.parent / path).is_file()]
+if not existing:
+    detail = ", ".join(matches) if matches else "no matching references"
+    raise SystemExit(
+        f"ERROR: {file} has no existing local resource matching /{pattern}/ ({detail})"
+    )
+PY
+}
+
+# Compilers may minify declarations or freely change insignificant whitespace.
+require_css_text() {
+  local directory=$1 expected=$2
+  python - "$directory" "$expected" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+directory, expected = Path(sys.argv[1]), sys.argv[2]
+files = sorted(directory.rglob("*.css"))
+compact = re.sub(r"\s+", "", "\n".join(
+    path.read_text(encoding="utf-8", errors="replace") for path in files
+))
+needle = re.sub(r"\s+", "", expected)
+if needle not in compact:
+    raise SystemExit(
+        f"ERROR: CSS text {expected!r} was not found in {len(files)} stylesheet(s) under {directory}"
+    )
+PY
+}

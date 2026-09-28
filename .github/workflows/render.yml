@@ -27,22 +27,22 @@ jobs:
       - name: Verify rendered output
         run: |
           source tests/lib/assert.sh
-          test -f template.html
-          grep -q 'class="fs-cover-logo"' template.html
-          grep -q -- '--fs-logo-width: 220px' template.html
-          grep -q 'left: var(--fs-edge-inset)' template.html
-          test "$(grep -c 'src="figures/fs_logo_blue.svg"' template.html)" -eq 2
-          grep -qi 'simplemenu' template.html
-          grep -q 'class="menubar"' template.html
+          require_file template.html
+          require_html_class template.html fs-cover-logo
+          require_css_text template_files '--fs-logo-width:220px'
+          require_css_text template_files 'left:var(--fs-edge-inset)'
+          require_html_attribute_count template.html img src figures/fs_logo_blue.svg 2
+          require_grep "class=['\"]menubar['\"]" _extensions/fs-ise-presentation/_extension.yml
+          require_html_resource template.html 'simplemenu[^/]*\.js$'
+          require_html_resource template.html 'simplemenu[^/]*\.css$'
           for group in Introduction Formatting Examples; do
-            grep -q "data-name=.$group." template.html
+            require_grep "data-name=['\"]$group['\"]" template.html
           done
-          test -f figures/fs_logo_blue.svg
-          test -f figures/title_background.png
-          test -d template_files
-          find template_files -type f -name 'reveal.js' -print -quit | grep -q .
-          find template_files -type f -name '*.css' -print -quit | grep -q .
-          find template_files -type f -name '*.js' -print -quit | grep -q .
+          require_file figures/fs_logo_blue.svg
+          require_file figures/title_background.png
+          require_dir template_files
+          require_html_resource template.html 'reveal[^/]*\.js$'
+          require_html_resource template.html 'reveal[^/]*\.css$'
 
       - name: Verify direct document rendering
         run: quarto render template.qmd

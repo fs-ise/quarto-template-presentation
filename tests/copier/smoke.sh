@@ -40,17 +40,19 @@ test ! -e "$project/tests/copier"
 (cd "$project" && quarto render)
 html="$project/_site/presentation.html"
 test -f "$html"
-grep -q 'class="quarto-title-block fs-cover"' "$html"
-grep -q 'data-state="fs-cover-active"' "$html"
-grep -q 'data-background-image="figures/title_background.png"' "$html"
-grep -q 'data-background-size="cover"' "$html"
-grep -q 'data-background-position="center"' "$html"
-grep -q 'class="fs-cover-logo"' "$html"
-test "$(grep -c 'src="figures/fs_logo_blue.svg"' "$html")" -eq 2
-grep -q 'class="menubar"' "$html"
-grep -qi 'simplemenu' "$html"
+require_html_class "$html" quarto-title-block
+require_html_class "$html" fs-cover
+require_html_attribute_count "$html" section data-state fs-cover-active 1
+require_html_attribute_count "$html" section data-background-image figures/title_background.png 1
+require_html_attribute_count "$html" section data-background-size cover 1
+require_html_attribute_count "$html" section data-background-position center 1
+require_html_class "$html" fs-cover-logo
+require_html_attribute_count "$html" img src figures/fs_logo_blue.svg 2
+require_grep "class=['\"]menubar['\"]" "$project/_extensions/fs-ise-presentation/_extension.yml"
+require_html_resource "$html" 'simplemenu[^/]*\.js$'
+require_html_resource "$html" 'simplemenu[^/]*\.css$'
 for group in Introduction "Main idea" Conclusion; do
-  grep -q "data-name=.$group." "$html"
+  require_grep "data-name=['\"]$group['\"]" "$html"
 done
 
 # Resources are copied as one directory. In particular, Quarto must not flatten
@@ -65,16 +67,16 @@ done
 # The slide-change handler uses a stable document class rather than relying on
 # where a particular Reveal version applies its data-state class.
 grep -q 'classList.toggle' "$html"
-grep -q 'html.fs-cover-visible #fs-header' "$html"
-grep -q 'section.fs-cover .fs-cover-logo' "$html"
-grep -q -- '--fs-logo-width: 220px' "$html"
-grep -q 'left: var(--fs-edge-inset)' "$html"
-grep -q 'width: var(--fs-logo-width)' "$html"
-grep -q 'width: 54%' "$html"
-grep -q 'html.fs-cover-visible .slide-number' "$html"
-grep -q 'html.fs-cover-visible #custom-slide-number' "$html"
-grep -q 'html.fs-cover-visible .reveal .progress' "$html"
-grep -q 'html.fs-cover-visible .menubar' "$html"
+require_css_text "$project/_site" 'html.fs-cover-visible #fs-header'
+require_css_text "$project/_site" 'section.fs-cover .fs-cover-logo'
+require_css_text "$project/_site" '--fs-logo-width:220px'
+require_css_text "$project/_site" 'left:var(--fs-edge-inset)'
+require_css_text "$project/_site" 'width:var(--fs-logo-width)'
+require_css_text "$project/_site" 'width:54%'
+require_css_text "$project/_site" 'html.fs-cover-visible .slide-number'
+require_css_text "$project/_site" 'html.fs-cover-visible #custom-slide-number'
+require_css_text "$project/_site" 'html.fs-cover-visible .reveal .progress'
+require_css_text "$project/_site" 'html.fs-cover-visible .menubar'
 grep -Eq 'slideNumber: (true|"c/?t?")' "$html"
 
 # Simplemenu must be a registered Reveal plugin, not merely a filter that emits

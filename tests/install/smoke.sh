@@ -21,14 +21,18 @@ verify_extension() {
 
   (cd "$project" && quarto render "$document")
   require_file "$html"
-  require_grep 'class="menubar"' "$html"
-  require_grep '[Ss]implemenu' "$html"
-  require_grep 'data-name=.Introduction.' "$html"
-  require_grep 'data-name=.Formatting.' "$html"
-  require_grep 'data-name=.Examples.' "$html"
+  # Simplemenu creates the footer from barhtml at runtime, so a menubar DOM
+  # element need not occur in the unexecuted HTML. Check its configuration,
+  # installed plugin, and emitted resources instead.
+  require_grep "class=['\"]menubar['\"]" "$extension/_extension.yml"
+  require_html_resource "$html" 'simplemenu[^/]*\.js$'
+  require_html_resource "$html" 'simplemenu[^/]*\.css$'
+  for group in Introduction Formatting Examples; do
+    require_grep "data-name=['\"]$group['\"]" "$html"
+  done
   require_grep 'slideNumber: (true|"c/?t?")' "$html"
-  require_grep 'class="fs-cover-logo"' "$html"
-  require_grep 'data-background-image="figures/title_background.png"' "$html"
+  require_html_class "$html" fs-cover-logo
+  require_html_attribute_count "$html" section data-background-image figures/title_background.png 1
   require_file "$project/figures/fs_logo_blue.svg"
   require_file "$project/figures/title_background.png"
 }
