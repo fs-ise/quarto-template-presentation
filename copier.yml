@@ -5,6 +5,18 @@ _skip_if_exists:
 _tasks:
   - command: "quarto add fs-ise/quarto-template-presentation --no-prompt"
     when: "{{ _copier_operation == 'copy' }}"
+_message_after_copy: |
+  {{ '\033[1;32m' }}✓ Presentation "{{ presentation_title }}" created successfully!{{ '\033[0m' }}
+
+  {{ '\033[1;34m' }}Next steps:{{ '\033[0m' }}
+
+    cd "{{ _copier_conf.dst_path }}"
+    quarto preview presentation.qmd
+
+  Additional commands:
+
+    quarto render
+    quarto update extension fs-ise/quarto-template-presentation
 
 project_name:
   type: str
