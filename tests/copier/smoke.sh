@@ -39,6 +39,9 @@ grep -q 'data-background-position="center"' "$html"
 grep -q 'class="fs-cover-logo"' "$html"
 test "$(grep -c 'src="figures/fs_logo_blue.svg"' "$html")" -eq 2
 grep -q 'class="menubar"' "$html"
+for group in Introduction "Main idea" Conclusion; do
+  grep -q "data-name=.$group." "$html"
+done
 
 # Resources are copied as one directory. In particular, Quarto must not flatten
 # individual format resources into the project or rendered-site roots.
@@ -49,14 +52,18 @@ for asset in fs_logo_blue.svg title_background.png; do
   test ! -e "$project/_site/$asset"
 done
 
-# Reveal's slide state suppresses both numbering implementations and the
-# floating header on the cover; the defaults remain on every ordinary slide.
-grep -q 'html.fs-cover-active #fs-header' "$html"
+# The slide-change handler uses a stable document class rather than relying on
+# where a particular Reveal version applies its data-state class.
+grep -q 'classList.toggle' "$html"
+grep -q 'html.fs-cover-visible #fs-header' "$html"
 grep -q 'section.fs-cover .fs-cover-logo' "$html"
 grep -q 'left: 6%' "$html"
 grep -q 'width: 220px' "$html"
-grep -q 'html.fs-cover-active .slide-number' "$html"
-grep -q 'html.fs-cover-active #custom-slide-number' "$html"
+grep -q 'width: 54%' "$html"
+grep -q 'html.fs-cover-visible .slide-number' "$html"
+grep -q 'html.fs-cover-visible #custom-slide-number' "$html"
+grep -q 'html.fs-cover-visible .reveal .progress' "$html"
+grep -q 'html.fs-cover-visible .menubar' "$html"
 grep -Eq 'slideNumber: (true|"c/?t?")' "$html"
 
 # Check the referenced resources through an HTTP server, as preview/publishing

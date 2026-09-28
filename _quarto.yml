@@ -2,5 +2,3 @@ project:
   type: default
   render:
     - template.qmd
-
-format: fs-ise-presentation-revealjs

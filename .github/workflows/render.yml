@@ -20,6 +20,9 @@ jobs:
         with:
           version: "1.8.0"
 
+      - name: Install Simplemenu
+        run: quarto add martinomagnifico/quarto-simplemenu --no-prompt
+
       - name: Render example presentation from the project root
         run: quarto render
 
@@ -62,6 +65,7 @@ jobs:
           output=$(mktemp -d)
           cd "$output"
           quarto use template "$GITHUB_WORKSPACE" --no-prompt
+          quarto add martinomagnifico/quarto-simplemenu --no-prompt
           test -f template.qmd
           test -d _extensions/fs-ise-presentation
           test -f _extensions/fs-ise-presentation/figures/title_background.png

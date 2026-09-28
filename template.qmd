@@ -3,18 +3,22 @@ title: "Ideas into Impact: A Frankfurt School Presentation"
 subtitle: "The full-bleed cover is supplied automatically by the extension"
 author: "Your Name"
 date: today
-format: fs-ise-presentation-revealjs
+format:
+  fs-ise-presentation-revealjs:
+    filters:
+      - simplemenu
+    simplemenu:
+      barhtml:
+        footer: |
+          <div class="menubar"><ul class="menu"></ul></div>
+      auto: true
 ---
+
+# Introduction {data-name="Introduction"}
 
 ## A focused story
 
 Use this template to communicate one clear idea.
-
-<!--
-In a Copier-generated project, Simplemenu can label a section like this:
-
-## Evidence {data-name="Evidence"}
--->
 
 ::: {.incremental}
 - Begin with the question your audience cares about.
@@ -26,6 +30,8 @@ In a Copier-generated project, Simplemenu can label a section like this:
 Speaker notes are visible in presenter view. Press **S** during a presentation
 to open it.
 :::
+
+# Formatting {data-name="Formatting"}
 
 ## Two perspectives
 
@@ -63,6 +69,8 @@ $$
 $$
 
 Inline notation such as $n \ge 1$ works alongside display mathematics.
+
+# Examples {data-name="Examples"}
 
 ## Reproducible snippets
 

@@ -8,6 +8,13 @@ and slide-number elements, and presentation-friendly sizing and typography.
 See [`template.qmd`](template.qmd) for a compact, renderable presentation that
 demonstrates the format's main features.
 
+The repository example also uses
+[Simplemenu](https://github.com/martinomagnifico/quarto-simplemenu). After
+cloning the repository, install that filter once with
+`quarto add martinomagnifico/quarto-simplemenu --no-prompt`; the project
+configuration then renders its Introduction, Formatting, and Examples groups
+as the navigation menu.
+
 ## Cover page
 
 Every presentation gets a full-bleed cover automatically: the packaged
