@@ -2,7 +2,9 @@
 
 This reveal.js presentation uses the
 [`fs-ise-presentation`](https://github.com/fs-ise/quarto-template-presentation)
-Quarto extension.
+Quarto extension. Copier also installs Simplemenu for section navigation,
+QRcode for QR-code shortcodes, and Iconify for icons. These dependencies live
+in this project's `_extensions/` directory.
 
 ## Work on the presentation
 
@@ -20,10 +22,10 @@ The rendered site is written to `_site/`.
 
 ## Update dependencies
 
-Update the presentation extension independently of this project's files:
+Update all four installed extensions independently of this project's files:
 
 ```bash
-quarto update extension fs-ise/quarto-template-presentation
+quarto update extension --all
 ```
 
 Update the Copier-managed scaffolding from the project directory:

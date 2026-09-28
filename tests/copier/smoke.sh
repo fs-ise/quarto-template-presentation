@@ -20,6 +20,9 @@ done
 test -f "$project/_extensions/fs-ise-presentation/_extension.yml"
 test -f "$project/_extensions/fs-ise-presentation/title-slide.html"
 test -f "$project/_extensions/fs-ise-presentation/images/title_background.png"
+for extension in simplemenu qrcode iconify; do
+  test -f "$project/_extensions/$extension/_extension.yml"
+done
 test ! -e "$project/copier.yml"
 test ! -e "$project/copier-template"
 test ! -e "$project/tests/copier"
@@ -28,6 +31,7 @@ test ! -e "$project/tests/copier"
 test -f "$project/_site/presentation.html"
 grep -q 'class="quarto-title-block fs-cover"' "$project/_site/presentation.html"
 grep -q "background-image: url('images/title_background.png')" "$project/_site/presentation.html"
+grep -q 'class="menubar"' "$project/_site/presentation.html"
 test -f "$project/_site/images/title_background.png"
 
 # A document-level image replaces the extension default without changing the

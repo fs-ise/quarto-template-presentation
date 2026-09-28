@@ -10,6 +10,12 @@ format: fs-ise-presentation-revealjs
 
 Use this template to communicate one clear idea.
 
+<!--
+In a Copier-generated project, Simplemenu can label a section like this:
+
+## Evidence {data-name="Evidence"}
+-->
+
 ::: {.incremental}
 - Begin with the question your audience cares about.
 - Support the answer with evidence.
@@ -79,6 +85,13 @@ Edit the metadata, replace the examples, and keep each slide focused.
 Render with `quarto render template.qmd` or develop interactively with
 `quarto preview template.qmd`.
 :::
+
+<!--
+Copier projects also install QR-code and Iconify extensions. Examples:
+
+{{< qrcode https://example.com >}}
+{{< iconify fa6-solid chart-line >}}
+-->
 
 ## Charts
 

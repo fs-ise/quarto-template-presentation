@@ -97,9 +97,15 @@ cd my-talk
 quarto render
 ```
 
-Approve the trusted template task when prompted. It runs `quarto add` to
-install the published extension into the new project's `_extensions/`
-directory; the extension source is not duplicated in the Copier template.
+Approve the trusted template task when prompted. From the generated project's
+directory, it runs noninteractive `quarto add` commands to install the
+published `fs-ise-presentation` extension as well as
+[Simplemenu](https://github.com/martinomagnifico/quarto-simplemenu),
+[QRcode](https://github.com/jmbuhr/quarto-qrcode), and
+[Iconify](https://github.com/mcanouil/quarto-iconify) into `_extensions/`.
+Simplemenu is configured as a bottom menu and automatically derives its links
+from slide sections. Third-party sources are not duplicated in the Copier
+template.
 The generated project includes `presentation.qmd`, `_quarto.yml`, `README.md`,
 `Makefile`, and a `figures/` directory. For unattended generation, provide
 answers with Copier's `--data` options and pass `--trust`.
@@ -188,12 +194,15 @@ to use the same extension version everywhere.
 
 ### Update a Copier-generated project
 
-The Quarto extension and Copier scaffolding have separate update lifecycles.
-From the generated project's root, update the installed styling with:
+The Quarto extensions and Copier scaffolding have separate update lifecycles.
+From the generated project's root, update all four installed extensions with:
 
 ```bash
-quarto update extension fs-ise/quarto-template-presentation
+quarto update extension --all
 ```
+
+You can instead update one dependency by naming its repository, for example
+`quarto update extension martinomagnifico/quarto-simplemenu`.
 
 Update generated support files from this Copier template with:
 
@@ -206,4 +215,7 @@ merges scaffold changes with local changes. In addition, `presentation.qmd` is
 marked to be skipped on updates so scaffold refreshes do not overwrite slide
 content. Review and commit update results as usual. The generated Makefile
 provides the equivalent `make update-extension` and `make update-template`
-shortcuts.
+shortcuts. The additional extensions and Simplemenu configuration belong only
+to Copier-generated projects: `quarto use template` and `quarto add` retain
+their existing, independent behavior and install only the files requested by
+those commands.

@@ -3,7 +3,12 @@ _answers_file: .copier-answers.yml
 _skip_if_exists:
   - presentation.qmd
 _tasks:
-  - command: "quarto add fs-ise/quarto-template-presentation --no-prompt"
+  - command: >-
+      cd "{{ _copier_conf.dst_path }}" &&
+      quarto add fs-ise/quarto-template-presentation --no-prompt &&
+      quarto add martinomagnifico/quarto-simplemenu --no-prompt &&
+      quarto add jmbuhr/quarto-qrcode --no-prompt &&
+      quarto add mcanouil/quarto-iconify --no-prompt
     when: "{{ _copier_operation == 'copy' }}"
 _message_after_copy: |
   {{ '\033[1;32m' }}✓ Presentation "{{ presentation_title }}" created successfully!{{ '\033[0m' }}
@@ -16,7 +21,7 @@ _message_after_copy: |
   Additional commands:
 
     quarto render
-    quarto update extension fs-ise/quarto-template-presentation
+    quarto update extension --all
 
 project_name:
   type: str

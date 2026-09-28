@@ -2,4 +2,12 @@ project:
   type: default
   output-dir: _site
 
-format: fs-ise-presentation-revealjs
+format:
+  fs-ise-presentation-revealjs:
+    filters:
+      - simplemenu
+    simplemenu:
+      barhtml:
+        footer: |
+          <div class="menubar"><ul class="menu"></ul></div>
+      auto: true
