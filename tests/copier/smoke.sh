@@ -104,9 +104,13 @@ done
 require_grep 'classList\.toggle' "$html"
 require_css_text "$project/_site" 'html.fs-cover-visible #fs-header'
 require_css_text "$project/_site" 'section.fs-cover .fs-cover-logo'
-require_css_text "$project/_site" '--fs-logo-width:220px'
+require_css_text "$project/_site" '--fs-logo-width:190px'
+require_css_text "$project/_site" '--fs-logo-clearance:235px'
 require_css_text "$project/_site" 'left:var(--fs-edge-inset)'
 require_css_text "$project/_site" 'width:var(--fs-logo-width)'
+require_css_text "$project/_site" 'padding-right:var(--fs-logo-clearance)!important'
+require_css_text "$project/_site" 'pointer-events:none'
+require_grep 'currentSlide.appendChild(logo)' "$html"
 require_css_text "$project/_site" 'width:54%'
 require_css_text "$project/_site" 'html.fs-cover-visible .slide-number'
 require_css_text "$project/_site" 'html.fs-cover-visible #custom-slide-number'

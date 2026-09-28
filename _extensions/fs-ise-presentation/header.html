@@ -1,12 +1,16 @@
-<header id="fs-header">
-  <img src="figures/fs_logo_blue.svg" alt="Frankfurt School Logo" />
+<header id="fs-header" aria-hidden="true">
+  <img src="figures/fs_logo_blue.svg" alt="" />
 </header>
 <script>
   (() => {
     const coverClass = "fs-cover-visible";
+    const logo = document.getElementById("fs-header");
 
     const syncCoverState = (event) => {
       const currentSlide = event?.currentSlide || window.Reveal?.getCurrentSlide();
+      if (currentSlide && !currentSlide.classList.contains("fs-cover")) {
+        currentSlide.appendChild(logo);
+      }
       document.documentElement.classList.toggle(
         coverClass,
         Boolean(currentSlide?.classList.contains("fs-cover"))
