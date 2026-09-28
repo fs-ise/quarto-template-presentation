@@ -36,8 +36,11 @@ jobs:
           require_html_resource template.html 'simplemenu[^/]*\.js$'
           require_html_resource template.html 'simplemenu[^/]*\.css$'
           for group in Introduction Formatting Examples; do
-            require_grep "data-name=['\"]$group['\"]" template.html
+            require_html_attribute_count template.html section data-name "$group" 1
           done
+          require_reveal_slide_numbers template.html
+          require_html_attribute_count template.html section data-state fs-cover-active 1
+          require_css_text template_files 'html.fs-cover-visible .slide-number'
           require_file figures/fs_logo_blue.svg
           require_file figures/title_background.png
           require_dir template_files

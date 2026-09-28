@@ -28,11 +28,16 @@ verify_extension() {
   require_html_resource "$html" 'simplemenu[^/]*\.js$'
   require_html_resource "$html" 'simplemenu[^/]*\.css$'
   for group in Introduction Formatting Examples; do
-    require_grep "data-name=['\"]$group['\"]" "$html"
+    require_html_attribute_count "$html" section data-name "$group" 1
   done
-  require_grep 'slideNumber: (true|"c/?t?")' "$html"
+  require_reveal_slide_numbers "$html"
   require_html_class "$html" fs-cover-logo
+  require_html_attribute_count "$html" section data-state fs-cover-active 1
   require_html_attribute_count "$html" section data-background-image figures/title_background.png 1
+  # Numbering is globally enabled above and suppressed only while the cover
+  # state is active, so ordinary slides retain Reveal's slide number.
+  require_css_text "${html%.html}_files" 'html.fs-cover-visible .slide-number'
+  require_grep 'currentSlide\?\.classList\.contains\("fs-cover"\)' "$extension/header.html"
   require_file "$project/figures/fs_logo_blue.svg"
   require_file "$project/figures/title_background.png"
 }

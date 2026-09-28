@@ -52,7 +52,7 @@ require_grep "class=['\"]menubar['\"]" "$project/_extensions/fs-ise-presentation
 require_html_resource "$html" 'simplemenu[^/]*\.js$'
 require_html_resource "$html" 'simplemenu[^/]*\.css$'
 for group in Introduction "Main idea" Conclusion; do
-  require_grep "data-name=['\"]$group['\"]" "$html"
+  require_html_attribute_count "$html" section data-name "$group" 1
 done
 
 # Resources are copied as one directory. In particular, Quarto must not flatten
@@ -77,7 +77,7 @@ require_css_text "$project/_site" 'html.fs-cover-visible .slide-number'
 require_css_text "$project/_site" 'html.fs-cover-visible #custom-slide-number'
 require_css_text "$project/_site" 'html.fs-cover-visible .reveal .progress'
 require_css_text "$project/_site" 'html.fs-cover-visible .menubar'
-grep -Eq 'slideNumber: (true|"c/?t?")' "$html"
+require_reveal_slide_numbers "$html"
 
 # Simplemenu must be a registered Reveal plugin, not merely a filter that emits
 # dormant markup. Its shared extension defaults also keep generated projects

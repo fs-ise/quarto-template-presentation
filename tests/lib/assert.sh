@@ -79,6 +79,58 @@ if not parser.matches:
 PY
 }
 
+# Check the value that Quarto passes to Reveal, while allowing Quarto to emit
+# either JavaScript object-literal keys or JSON-style quoted keys.  This is a
+# semantic assertion: all Reveal slide-number modes are accepted, but false or
+# a missing setting is not.
+require_reveal_slide_numbers() {
+  local file=$1
+  python - "$file" <<'PY'
+from html.parser import HTMLParser
+from pathlib import Path
+import re
+import sys
+
+file = sys.argv[1]
+
+class Scripts(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.in_script = False
+        self.scripts = []
+        self.current = []
+
+    def handle_starttag(self, tag, _attrs):
+        if tag == "script":
+            self.in_script = True
+            self.current = []
+
+    def handle_data(self, data):
+        if self.in_script:
+            self.current.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "script" and self.in_script:
+            self.scripts.append("".join(self.current))
+            self.in_script = False
+
+parser = Scripts()
+parser.feed(Path(file).read_text(encoding="utf-8"))
+initializers = [script for script in parser.scripts if ".initialize(" in script]
+key = r"(?:slideNumber|['\"]slideNumber['\"])"
+value = r"(true|['\"](?:c|h|v|c/t|h/v|c\\.t|h\\.v)['\"])"
+matches = [
+    match.group(1).strip("'\"")
+    for script in initializers
+    for match in re.finditer(rf"{key}\s*:\s*{value}", script)
+]
+if not matches:
+    raise SystemExit(
+        f"ERROR: Reveal is not initialized with enabled slide numbering in {file}"
+    )
+PY
+}
+
 # Verify that an HTML document references a matching local resource and that
 # the referenced file was actually emitted beside it.
 require_html_resource() {
