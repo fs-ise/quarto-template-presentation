@@ -7,12 +7,22 @@ source "$repo_root/tests/lib/assert.sh"
 output_dir=$(mktemp -d)
 trap 'rm -rf "$output_dir"' EXIT
 
-copier copy --trust --defaults \
-  --data project_name="CI presentation" \
-  --data presentation_title="A deliberately long presentation title that demonstrates clean wrapping on the cover page" \
-  --data author="CI" \
-  --data subtitle="Generated noninteractively" \
-  "$repo_root" "$output_dir/project"
+# Exercise the exact noninteractive command from an unrelated directory. This
+# catches Copier tasks which accidentally install into the caller or template
+# checkout instead of the generated project.
+invocation_dir="$output_dir/unrelated-caller"
+mkdir -p "$invocation_dir"
+require_absent "$repo_root/_extensions/qrcode"
+require_absent "$repo_root/_extensions/iconify"
+(
+  cd "$invocation_dir"
+  copier copy --trust --defaults \
+    --data project_name="CI presentation" \
+    --data presentation_title="A deliberately long presentation title that demonstrates clean wrapping on the cover page" \
+    --data author="CI" \
+    --data subtitle="Generated noninteractively" \
+    "$repo_root" "$output_dir/project"
+)
 
 project="$output_dir/project"
 for path in presentation.qmd _quarto.yml README.md Makefile .gitignore .copier-answers.yml; do
@@ -71,21 +81,14 @@ done
 require_absent "$project/copier.yml"
 require_absent "$project/copier-template"
 require_absent "$project/tests/copier"
+require_absent "$invocation_dir/_extensions"
+require_absent "$repo_root/_extensions/qrcode"
+require_absent "$repo_root/_extensions/iconify"
 
 (cd "$project" && quarto render)
 html="$project/_site/presentation.html"
 require_file "$html"
-require_html_class "$html" quarto-title-block
-require_html_class "$html" fs-cover
-require_html_attribute_count "$html" section data-state fs-cover-active 1
-require_html_attribute_count "$html" section data-background-image figures/title_background.png 1
-require_html_attribute_count "$html" section data-background-size cover 1
-require_html_attribute_count "$html" section data-background-position center 1
-require_html_class "$html" fs-cover-logo
-require_html_attribute_count "$html" img src figures/fs_logo_blue.svg 2
-require_grep "class=['\"]menubar['\"]" "$project/_extensions/fs-ise-presentation/_extension.yml"
-require_html_resource "$html" 'simplemenu[^/]*\.js$'
-require_html_resource "$html" 'simplemenu[^/]*\.css$'
+require_presentation_style "$project" "$html"
 for group in Introduction "Main idea" Conclusion; do
   require_html_attribute_count "$html" section data-name "$group" 1
 done
@@ -104,19 +107,7 @@ done
 require_grep 'classList\.toggle' "$html"
 require_css_text "$project/_site" 'html.fs-cover-visible #fs-header'
 require_css_text "$project/_site" 'section.fs-cover .fs-cover-logo'
-require_css_text "$project/_site" '--fs-logo-width:190px'
-require_css_text "$project/_site" '--fs-logo-clearance:235px'
-require_css_text "$project/_site" 'left:var(--fs-edge-inset)'
-require_css_text "$project/_site" 'width:var(--fs-logo-width)'
-require_css_text "$project/_site" 'padding-right:var(--fs-logo-clearance)!important'
-require_css_text "$project/_site" 'pointer-events:none'
 require_grep 'currentSlide.appendChild(logo)' "$html"
-require_css_text "$project/_site" 'width:54%'
-require_css_text "$project/_site" 'html.fs-cover-visible .slide-number'
-require_css_text "$project/_site" 'html.fs-cover-visible #custom-slide-number'
-require_css_text "$project/_site" 'html.fs-cover-visible .reveal .progress'
-require_css_text "$project/_site" 'html.fs-cover-visible .menubar'
-require_reveal_slide_numbers "$html"
 
 # Simplemenu must be a registered Reveal plugin, not merely a filter that emits
 # dormant markup. Its shared extension defaults also keep generated projects

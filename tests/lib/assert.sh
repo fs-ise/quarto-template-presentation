@@ -198,3 +198,46 @@ if needle not in compact:
     )
 PY
 }
+
+# Styling contract shared by every rendered FS-ISE presentation. Keep these
+# assertions in one place so generated projects cannot silently drift from the
+# repository example checked by the render workflow.
+require_presentation_style() {
+  local project=$1 html=$2
+  local extension="$project/_extensions/fs-ise-presentation"
+  local css_directory="${html%.html}_files"
+
+  require_html_class "$html" quarto-title-block
+  require_html_class "$html" fs-cover
+  require_html_class "$html" fs-cover-logo
+  require_html_attribute_count "$html" section data-state fs-cover-active 1
+  require_html_attribute_count "$html" section data-background-image figures/title_background.png 1
+  require_html_attribute_count "$html" section data-background-size cover 1
+  require_html_attribute_count "$html" section data-background-position center 1
+  require_html_attribute_count "$html" img src figures/fs_logo_blue.svg 2
+
+  require_grep "class=['\"]menubar['\"]" "$extension/_extension.yml"
+  require_html_resource "$html" 'simplemenu[^/]*\.js$'
+  require_html_resource "$html" 'simplemenu[^/]*\.css$'
+  require_reveal_slide_numbers "$html"
+
+  require_css_text "$css_directory" '--fs-logo-width:190px'
+  require_css_text "$css_directory" '--fs-logo-clearance:235px'
+  require_css_text "$css_directory" 'left:var(--fs-edge-inset)'
+  require_css_text "$css_directory" 'right:var(--fs-edge-inset)'
+  require_css_text "$css_directory" 'left:auto'
+  require_css_text "$css_directory" 'width:var(--fs-logo-width)'
+  require_css_text "$css_directory" 'padding-right:var(--fs-logo-clearance)!important'
+  require_css_text "$css_directory" 'background:none'
+  require_css_text "$css_directory" 'border:0'
+  require_css_text "$css_directory" 'box-shadow:none'
+  require_css_text "$css_directory" 'pointer-events:none'
+  require_css_text "$css_directory" 'width:54%'
+  require_css_text "$css_directory" 'html.fs-cover-visible .slide-number'
+  require_css_text "$css_directory" 'html.fs-cover-visible #custom-slide-number'
+  require_css_text "$css_directory" 'html.fs-cover-visible .reveal .progress'
+  require_css_text "$css_directory" 'html.fs-cover-visible .menubar'
+
+  require_file "$project/figures/fs_logo_blue.svg"
+  require_file "$project/figures/title_background.png"
+}

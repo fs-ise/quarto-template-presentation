@@ -3,9 +3,27 @@ _answers_file: .copier-answers.yml
 _skip_if_exists:
   - presentation.qmd
 _tasks:
-  - quarto add fs-ise/quarto-template-presentation --no-prompt
-  - quarto add jmbuhr/quarto-qrcode --no-prompt
-  - quarto add mcanouil/quarto-iconify --no-prompt
+  # Copier runs tasks in the directory from which Copier itself was invoked,
+  # not in the freshly generated project.  Pin every task to the destination
+  # so Quarto discovers that project's _quarto.yml and installs locally.
+  - command: |
+      printf 'Copier extension install: working directory: %s\n' "$(pwd -P)"
+      printf 'Copier extension install: resolved Quarto project root: %s\n' "$(pwd -P)"
+      printf '%s\n' 'Directory structure before extension installation:'
+      find . -maxdepth 3 -print | sort
+    working_directory: "{{ _copier_conf.dst_path }}"
+  - command: quarto add fs-ise/quarto-template-presentation --no-prompt
+    working_directory: "{{ _copier_conf.dst_path }}"
+  - command: quarto add jmbuhr/quarto-qrcode --no-prompt
+    working_directory: "{{ _copier_conf.dst_path }}"
+  - command: quarto add mcanouil/quarto-iconify --no-prompt
+    working_directory: "{{ _copier_conf.dst_path }}"
+  - command: |
+      printf 'Copier extension install complete: working directory: %s\n' "$(pwd -P)"
+      printf 'Copier extension install complete: resolved Quarto project root: %s\n' "$(pwd -P)"
+      printf '%s\n' 'Directory structure after extension installation:'
+      find . -maxdepth 4 -print | sort
+    working_directory: "{{ _copier_conf.dst_path }}"
 _message_after_copy: |
   {{ '\033[1;32m' }}✓ Presentation "{{ presentation_title }}" created successfully!{{ '\033[0m' }}
 

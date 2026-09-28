@@ -31,21 +31,10 @@ jobs:
         run: |
           source tests/lib/assert.sh
           require_file template.html
-          require_html_class template.html fs-cover-logo
-          require_css_text template_files '--fs-logo-width:220px'
-          require_css_text template_files 'left:var(--fs-edge-inset)'
-          require_html_attribute_count template.html img src figures/fs_logo_blue.svg 2
-          require_grep "class=['\"]menubar['\"]" _extensions/fs-ise-presentation/_extension.yml
-          require_html_resource template.html 'simplemenu[^/]*\.js$'
-          require_html_resource template.html 'simplemenu[^/]*\.css$'
+          require_presentation_style . template.html
           for group in Introduction Formatting Examples; do
             require_html_attribute_count template.html section data-name "$group" 1
           done
-          require_reveal_slide_numbers template.html
-          require_html_attribute_count template.html section data-state fs-cover-active 1
-          require_css_text template_files 'html.fs-cover-visible .slide-number'
-          require_file figures/fs_logo_blue.svg
-          require_file figures/title_background.png
           require_dir template_files
           require_html_resource template.html 'reveal[^/]*\.js$'
           require_html_resource template.html 'reveal[^/]*\.css$'
