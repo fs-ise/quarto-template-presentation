@@ -3,3 +3,7 @@
 /template.html
 /template_files/
 /presentation-html/
+/.tools/
+/.test-artifacts/
+/.venv/
+/test-results/

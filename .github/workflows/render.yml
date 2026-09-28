@@ -10,45 +10,64 @@ permissions:
   contents: read
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.22"
+
+      - name: Run complete test suite
+        run: make test
+        env:
+          KEEP_TEST_PROJECTS: "1"
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-diagnostics
+          path: |
+            .test-artifacts/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
   render:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pages: read
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
           version: "1.8.0"
 
+      # This intentionally renders the checked-in example directly; publishing
+      # must not depend on Copier generation or its network-installed extras.
       - name: Render canonical example presentation
         run: quarto render template.qmd
 
-      - name: Verify rendered output
-        run: |
-          source tests/lib/assert.sh
-          require_file template.html
-          require_presentation_style . template.html
-          for group in Introduction Formatting Examples; do
-            require_html_attribute_count template.html section data-name "$group" 1
-          done
-          require_dir template_files
-          require_html_resource template.html 'reveal[^/]*\.js$'
-          require_html_resource template.html 'reveal[^/]*\.css$'
-
       - name: Assemble downloadable presentation
         run: |
-          source tests/lib/assert.sh
           distribution=presentation-html
           rm -rf "$distribution"
           mkdir "$distribution"
           cp template.html "$distribution/"
           cp template.html "$distribution/index.html"
           cp -a template_files figures "$distribution/"
-          require_file "$distribution/index.html"
+          test -f "$distribution/index.html"
 
           # Ensure every local resource referenced directly by the HTML was
           # included. Remote URLs, anchors, and inline data URLs need no file.
@@ -110,7 +129,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Publish example presentation
         id: deployment
@@ -118,28 +137,3 @@ jobs:
 
       - name: Verify images on GitHub Pages
         run: python tests/check-published-images.py "${{ steps.deployment.outputs.page_url }}"
-
-  generation:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-        with:
-          version: "1.8.0"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Install Copier
-        run: python -m pip install copier
-
-      - name: Test clean Quarto add and use-template installations
-        run: tests/install/smoke.sh
-
-      - name: Generate and render a Copier project
-        run: tests/copier/smoke.sh

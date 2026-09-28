@@ -5,7 +5,7 @@ _skip_if_exists:
 _tasks:
   # Pin every task to the destination so Quarto discovers the generated
   # project's _quarto.yml and installs the extensions locally.
-  - command: quarto add fs-ise/quarto-template-presentation --no-prompt
+  - command: quarto add {{ extension_source }} --no-prompt
     working_directory: "{{ _copier_conf.dst_path }}"
   - command: quarto add jmbuhr/quarto-qrcode --no-prompt
     working_directory: "{{ _copier_conf.dst_path }}"
@@ -43,3 +43,11 @@ subtitle:
   type: str
   help: Optional presentation subtitle (leave blank to omit)
   default: ""
+
+# Tests override this with the checkout path, ensuring that generated projects
+# exercise the proposed revision. It is hidden from the interactive prompt so
+# normal copy/update behaviour continues to use the public repository.
+extension_source:
+  type: str
+  default: fs-ise/quarto-template-presentation
+  when: false

@@ -1,0 +1,19 @@
+[project]
+name = "quarto-template-presentation-tests"
+version = "0.0.0"
+requires-python = ">=3.11"
+dependencies = [
+  "copier==9.10.2",
+  "playwright==1.55.0",
+  "pytest==8.4.2",
+  "pyyaml==6.0.2",
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+markers = [
+  "browser: requires Chromium",
+  "integration: invokes Quarto or a remote installer",
+]
+
