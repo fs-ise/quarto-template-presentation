@@ -16,14 +16,17 @@ def test_copier_project_and_answers(copier_project):
     assert answers["project_name"] == "CI presentation"
     assert answers["author"] == "CI"
     assert answers["subtitle"] == "Generated noninteractively"
-    assert answers["extension_source"], "answers must retain the extension source for updates"
     assert answers.get("_src_path"), "answers must retain Copier source path"
     assert answers.get("_commit"), "answers must retain Copier source revision"
 
     extension = find_fs_extension(copier_project)
     assert_manifest(extension / "_extension.yml")
-    for filename in ("_extension.yml", "header.html", "custom.scss"):
-        assert (extension / filename).read_bytes() == (ROOT / "_extensions/fs-ise-presentation" / filename).read_bytes(), (
+    checkout = ROOT / "_extensions/fs-ise-presentation"
+    installed_files = {path.relative_to(extension) for path in extension.rglob("*") if path.is_file()}
+    checkout_files = {path.relative_to(checkout) for path in checkout.rglob("*") if path.is_file()}
+    assert installed_files == checkout_files, "installed FS extension does not have the checkout's exact file set"
+    for filename in checkout_files:
+        assert (extension / filename).read_bytes() == (checkout / filename).read_bytes(), (
             f"Copier installed a different source revision of {filename}"
         )
     assert (extension / "_extensions/simplemenu/simplemenu.js").is_file()

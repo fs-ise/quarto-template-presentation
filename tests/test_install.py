@@ -36,9 +36,12 @@ def test_clean_quarto_use_template_uses_checkout(artifact_root):
     project.mkdir()
     run(["quarto", "use", "template", str(ROOT), "--no-prompt"], cwd=project)
     verify_install(project)
-    assert (project / "template.qmd").is_file()
+    # Running outside the source project's tree ensures Quarto resolves this
+    # directory (not the checkout's parent _quarto.yml) as the destination.
+    document = project / "template.qmd"
+    assert document.is_file()
     assert not (project / "copier.yml").exists(), "template internals leaked into generated project"
-    run(["quarto", "render", "template.qmd"], cwd=project)
+    run(["quarto", "render", document.name], cwd=project)
     assert_resources_exist(project / "template.html")
 
 

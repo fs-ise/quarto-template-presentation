@@ -1,7 +1,7 @@
 QUARTO_VERSION := 1.8.0
 QUARTO := $(CURDIR)/.tools/quarto-$(QUARTO_VERSION)/bin/quarto
 
-.PHONY: test test-static test-public-install clean-test-tools
+.PHONY: test test-static test-install test-copier test-render test-browser test-public-install clean-test-tools
 
 $(QUARTO):
 	mkdir -p .tools
@@ -12,11 +12,34 @@ $(QUARTO):
 test: $(QUARTO)
 	uv sync
 	uv run playwright install chromium
-	PATH="$(dir $(QUARTO)):$$PATH" uv run pytest
+	mkdir -p test-results
+	PATH="$(dir $(QUARTO)):$$PATH" uv run pytest --junitxml=test-results/pytest.xml
 
 test-static:
 	uv sync
-	uv run pytest -m "not integration and not browser"
+	mkdir -p test-results
+	uv run pytest -m "not integration and not browser" --junitxml=test-results/static.xml
+
+test-install: $(QUARTO)
+	uv sync
+	mkdir -p test-results
+	PATH="$(dir $(QUARTO)):$$PATH" uv run pytest tests/test_install.py --junitxml=test-results/install.xml
+
+test-copier: $(QUARTO)
+	uv sync
+	mkdir -p test-results
+	PATH="$(dir $(QUARTO)):$$PATH" uv run pytest tests/test_copier.py tests/test_render.py::test_generated_project_rendering --junitxml=test-results/copier.xml
+
+test-render: $(QUARTO)
+	uv sync
+	mkdir -p test-results
+	PATH="$(dir $(QUARTO)):$$PATH" uv run pytest tests/test_render.py::test_canonical_example_rendering --junitxml=test-results/render.xml
+
+test-browser: $(QUARTO)
+	uv sync
+	uv run playwright install chromium
+	mkdir -p test-results
+	PATH="$(dir $(QUARTO)):$$PATH" uv run pytest tests/test_browser.py --junitxml=test-results/browser.xml
 
 # Deliberately separate from PR source-revision tests: this checks that the
 # public command remains usable, not that GitHub already contains this commit.

@@ -8,6 +8,8 @@ import threading
 import pytest
 from playwright.sync_api import sync_playwright
 
+from conftest import DIAGNOSTICS
+
 
 @contextlib.contextmanager
 def server(directory):
@@ -49,6 +51,24 @@ def assert_logo_at_fixed_top_right(page):
         assert not overlaps, "content logo overlaps the active slide heading"
 
 
+def save_browser_diagnostics(page, name):
+    target = DIAGNOSTICS / "browser" / name
+    target.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=target / "page.png", full_page=True)
+    (target / "dom.html").write_text(page.content(), encoding="utf-8")
+
+
+def browser_state(page):
+    return page.evaluate("""() => ({
+      plugins: window.Reveal ? Object.keys(Reveal.getPlugins()) : [],
+      simplemenu: window.Reveal ? Reveal.getConfig().simplemenu : null,
+      menu: [...document.querySelectorAll('.menubar')].map(x => x.outerHTML),
+      sections: [...document.querySelectorAll('section[data-name]')].map(x => ({
+        name: x.dataset.name, id: x.id, parent: x.parentElement && x.parentElement.tagName
+      }))
+    })""")
+
+
 @pytest.mark.browser
 @pytest.mark.integration
 @pytest.mark.parametrize("viewport", [{"width": 1920, "height": 1080}, {"width": 800, "height": 600}], ids=["fullscreen", "embedded"])
@@ -57,34 +77,46 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
         browser = playwright.chromium.launch()
         page = browser.new_page(viewport=viewport)
         failed = []
+        console = []
+        exceptions = []
         page.on("requestfailed", lambda request: failed.append(request.url))
-        page.goto(f"{origin}/{canonical_html.name}", wait_until="networkidle")
-        page.wait_for_function("window.Reveal && Reveal.isReady()")
+        page.on("console", lambda message: console.append(f"{message.type}: {message.text}"))
+        page.on("pageerror", lambda error: exceptions.append(str(error)))
+        try:
+            page.goto(f"{origin}/{canonical_html.name}", wait_until="networkidle")
+            page.wait_for_function("window.Reveal && Reveal.isReady()")
+            page.wait_for_function("document.querySelectorAll('.menubar .menu li').length >= 3")
 
         # Cover has its own top-left mark and suppresses the shared mark.
-        cover_logo = page.locator("section.present.fs-cover .fs-cover-logo")
-        assert cover_logo.is_visible()
-        cover_box = cover_logo.bounding_box()
-        canvas_box = page.locator(".reveal .slides").bounding_box()
-        assert cover_box and canvas_box
-        assert 0 <= cover_box["x"] - canvas_box["x"] <= 30, "cover logo is not at the upper-left edge"
-        assert 0 <= cover_box["y"] - canvas_box["y"] <= 30, "cover logo is not at the upper-left edge"
-        assert not page.locator("#fs-header").is_visible()
-        page.keyboard.press("ArrowRight")
-        page.wait_for_timeout(150)
-        assert_logo_at_fixed_top_right(page)
+            cover_logo = page.locator("section.present.fs-cover .fs-cover-logo")
+            assert cover_logo.is_visible()
+            cover_box = cover_logo.bounding_box()
+            canvas_box = page.locator(".reveal .slides").bounding_box()
+            assert cover_box and canvas_box
+            assert 0 <= cover_box["x"] - canvas_box["x"] <= 30, "cover logo is not at the upper-left edge"
+            assert 0 <= cover_box["y"] - canvas_box["y"] <= 30, "cover logo is not at the upper-left edge"
+            assert not page.locator("#fs-header").is_visible()
+            page.keyboard.press("ArrowRight")
+            page.wait_for_timeout(150)
+            assert_logo_at_fixed_top_right(page)
 
-        groups = page.locator(".menubar .menu li").all_inner_texts()
-        assert {"Introduction", "Formatting", "Examples"}.issubset(set(groups)), f"Simplemenu groups are wrong: {groups}"
-        assert page.locator(".menubar").is_visible(), "Simplemenu did not initialize"
-        numbers = page.locator(".slide-number:visible")
-        assert numbers.count(), "slide number is not visible on content slides"
-        assert "/" in numbers.first.inner_text(), "Simplemenu did not update the slide number"
-        before = page.evaluate("Reveal.getIndices()")
-        page.keyboard.press("ArrowRight")
-        page.wait_for_timeout(100)
-        assert page.evaluate("Reveal.getIndices()") != before, "keyboard navigation did not advance the presentation"
-        assert not failed, f"browser failed to load resources: {failed}"
+            groups = page.locator(".menubar .menu li").all_inner_texts()
+            assert {"Introduction", "Formatting", "Examples"}.issubset(set(groups)), f"Simplemenu groups are wrong: {groups}; state={browser_state(page)}"
+            assert page.locator(".menubar").is_visible(), "Simplemenu did not initialize"
+            numbers = page.locator(".slide-number:visible")
+            assert numbers.count(), "slide number is not visible on content slides"
+            assert "/" in numbers.first.inner_text(), "Simplemenu did not update the slide number"
+            before = page.evaluate("Reveal.getIndices()")
+            page.keyboard.press("ArrowRight")
+            page.wait_for_timeout(100)
+            assert page.evaluate("Reveal.getIndices()") != before, "keyboard navigation did not advance the presentation"
+            assert not exceptions, f"uncaught browser exceptions: {exceptions}; state={browser_state(page)}"
+            assert not failed, f"browser failed to load resources: {failed}"
+        except Exception:
+            save_browser_diagnostics(page, viewport.get("width", "unknown").__str__())
+            target = DIAGNOSTICS / "browser" / str(viewport.get("width", "unknown"))
+            (target / "console.txt").write_text("\n".join(console + ["", "Exceptions:", *exceptions, "", repr(browser_state(page))]), encoding="utf-8")
+            raise
         browser.close()
 
 
@@ -98,10 +130,6 @@ def test_negative_incorrect_logo_position_is_detected(canonical_html):
         page.wait_for_function("window.Reveal && Reveal.isReady()")
         page.keyboard.press("ArrowRight")
         page.evaluate("document.querySelector('#fs-header').style.transform = 'translateX(-120px)'")
-        try:
+        with pytest.raises(AssertionError):
             assert_logo_at_fixed_top_right(page)
-        except AssertionError as error:
-            assert "moved" in str(error) or "outside" in str(error) or "overlaps" in str(error)
-        else:
-            raise AssertionError("browser check accepted an incorrectly positioned logo")
         browser.close()

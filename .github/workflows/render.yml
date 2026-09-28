@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  static-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -23,8 +23,22 @@ jobs:
         with:
           version: "0.8.22"
 
-      - name: Run complete test suite
-        run: make test
+      - name: Run static tests
+        run: make test-static
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.22"
+      - name: Run installation and browser tests
+        run: |
+          make test-install
+          make test-browser
         env:
           KEEP_TEST_PROJECTS: "1"
 
@@ -36,11 +50,37 @@ jobs:
           path: |
             .test-artifacts/
             test-results/
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7
 
+  copier-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.22"
+      - name: Generate and render a Copier project
+        run: make test-copier
+        env:
+          KEEP_TEST_PROJECTS: "1"
+      - name: Upload Copier failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: copier-test-diagnostics
+          path: |
+            .test-artifacts/
+            test-results/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
   render:
-    needs: test
+    needs: static-tests
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -119,7 +159,7 @@ jobs:
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: render
+    needs: [render, integration-tests, copier-tests]
     runs-on: ubuntu-latest
     permissions:
       pages: write
