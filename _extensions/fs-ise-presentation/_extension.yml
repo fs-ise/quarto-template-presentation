@@ -16,5 +16,6 @@ contributes:
       auto-stretch: false
       slide-level: 2
       format-resources:
-        - figures/fs_logo_blue.svg
-        - figures/title_background.png
+        # Quarto copies an individually listed extension resource by basename.
+        # Listing the directory preserves `figures/` in the project and output.
+        - figures

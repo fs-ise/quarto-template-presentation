@@ -67,5 +67,9 @@ jobs:
           test ! -e tests/copier
           quarto render template.qmd
           test -f template.html
+          test -f figures/fs_logo_blue.svg
           test -f figures/title_background.png
-          grep -q 'src="figures/title_background.png"' template.html
+          test ! -e fs_logo_blue.svg
+          test ! -e title_background.png
+          grep -q 'data-background-image="figures/title_background.png"' template.html
+          grep -q 'src="figures/fs_logo_blue.svg"' template.html

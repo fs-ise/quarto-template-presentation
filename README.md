@@ -10,11 +10,11 @@ demonstrates the format's main features.
 
 ## Cover page
 
-Every presentation gets a split-view cover automatically: the packaged
-Frankfurt School image fills the left 45% and the title information is
-right-aligned and vertically centered in a white panel. The image is part of the
-extension, so it is installed with `quarto add`; projects do not need to copy a
-separate asset.
+Every presentation gets a full-bleed cover automatically: the packaged
+Frankfurt School image fills the complete 1600 × 900 slide without distortion,
+and the title information is left-aligned and vertically centered over its
+lighter right-hand area. The image is part of the extension, so it is installed
+with `quarto add`; projects do not need to supply a separate asset.
 
 To replace the image for one document, set `cover-image` in its YAML metadata.
 The path is relative to that document (or may be a project-relative path):
@@ -154,8 +154,8 @@ and supplies these defaults from its manifest:
 | `slide-number` | `true` | Displays slide numbers. |
 | `auto-stretch` | `false` | Prevents automatic stretching of media. |
 | `slide-level` | `2` | Starts a new slide at each level-two heading. |
-| `template-partials` | `title-slide.html` | Builds the reusable split-view cover. |
-| `format-resources` | `figures/fs_logo_blue.svg`, `figures/title_background.png` | Makes the FS logo and default cover available to rendered output. |
+| `template-partials` | `title-slide.html` | Builds the reusable full-bleed cover. |
+| `format-resources` | `figures/` | Preserves the shared asset directory in the project and rendered output. |
 
 Override reveal.js options in the document YAML while retaining the extension
 format, for example:
