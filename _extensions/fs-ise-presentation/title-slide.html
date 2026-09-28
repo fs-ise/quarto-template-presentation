@@ -1,10 +1,9 @@
 <section id="$idprefix$title-slide" class="quarto-title-block fs-cover">
-  <div
+  <img
     class="fs-cover-image"
-    role="img"
     aria-label="Presentation cover image"
-    style="background-image: url('$if(cover-image)$$cover-image$$else$images/title_background.png$endif$');"
-  ></div>
+    src="$if(cover-image)$$cover-image$$else$images/title_background.png$endif$"
+  />
   <div class="fs-cover-panel">
     <div class="fs-cover-details">
       $if(title)$<h1 class="title">$title$</h1>$endif$

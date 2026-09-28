@@ -30,7 +30,7 @@ test ! -e "$project/tests/copier"
 (cd "$project" && quarto render)
 test -f "$project/_site/presentation.html"
 grep -q 'class="quarto-title-block fs-cover"' "$project/_site/presentation.html"
-grep -q "background-image: url('images/title_background.png')" "$project/_site/presentation.html"
+grep -q 'src="images/title_background.png"' "$project/_site/presentation.html"
 grep -q 'class="menubar"' "$project/_site/presentation.html"
 test -f "$project/_site/images/title_background.png"
 
@@ -46,4 +46,5 @@ source = path.read_text()
 path.write_text(source.replace("date: today\n", "date: today\ncover-image: override.png\n", 1))
 PY
 (cd "$project" && quarto render)
-grep -q "background-image: url('override.png')" "$project/_site/presentation.html"
+grep -q 'src="override.png"' "$project/_site/presentation.html"
+test -f "$project/_site/override.png"

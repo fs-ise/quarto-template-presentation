@@ -12,8 +12,9 @@ demonstrates the format's main features.
 
 Every presentation gets a split-view cover automatically: the packaged
 Frankfurt School image fills the left 45% and the title information is
-right-aligned in a white panel. The image is part of the extension, so it is
-installed with `quarto add`; projects do not need to copy a separate asset.
+left-aligned and vertically centered in a white panel. The image is part of the
+extension, so it is installed with `quarto add`; projects do not need to copy a
+separate asset.
 
 To replace the image for one document, set `cover-image` in its YAML metadata.
 The path is relative to that document (or may be a project-relative path):
