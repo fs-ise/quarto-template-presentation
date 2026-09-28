@@ -204,7 +204,7 @@ PY
 # repository example checked by the render workflow.
 require_presentation_style() {
   local project=$1 html=$2
-  local extension="$project/_extensions/fs-ise-presentation"
+  local extension=${3:-"$project/_extensions/fs-ise-presentation"}
   local css_directory="${html%.html}_files"
 
   require_html_class "$html" quarto-title-block

@@ -7,13 +7,24 @@ source "$repo_root/tests/lib/assert.sh"
 output_dir=$(mktemp -d)
 trap 'rm -rf "$output_dir"' EXIT
 
+# On failure, report only the extension layout relevant to installation. This
+# keeps CI actionable without printing the generated project's complete tree.
+report_extension_layout() {
+  local project="$output_dir/project"
+  if [[ -d "$project/_extensions" ]]; then
+    printf '%s\n' 'Installed extension layout:' >&2
+    find "$project/_extensions" -maxdepth 5 -print | sort >&2
+  fi
+}
+trap report_extension_layout ERR
+
 # Exercise the exact noninteractive command from an unrelated directory. This
 # catches Copier tasks which accidentally install into the caller or template
 # checkout instead of the generated project.
 invocation_dir="$output_dir/unrelated-caller"
 mkdir -p "$invocation_dir"
-require_absent "$repo_root/_extensions/qrcode"
-require_absent "$repo_root/_extensions/iconify"
+require_absent "$repo_root/_extensions/jmbuhr/qrcode"
+require_absent "$repo_root/_extensions/mcanouil/iconify"
 (
   cd "$invocation_dir"
   copier copy --trust --defaults \
@@ -67,28 +78,34 @@ for key in ("_src_path", "_commit"):
         raise SystemExit(f"Expected non-empty string {key} in {answers_path}, got {value!r}")
 PY
 
-require_file "$project/_extensions/fs-ise-presentation/_extension.yml"
-require_file "$project/_extensions/fs-ise-presentation/title-slide.html"
-require_file "$project/_extensions/fs-ise-presentation/figures/title_background.png"
-require_file "$project/_extensions/fs-ise-presentation/figures/fs_logo_blue.svg"
-require_file "$project/_extensions/fs-ise-presentation/_extensions/simplemenu/_extension.yml"
-require_file "$project/_extensions/fs-ise-presentation/_extensions/simplemenu/LICENSE"
+fs_extension="$project/_extensions/fs-ise/fs-ise-presentation"
+simplemenu_extension="$fs_extension/_extensions/simplemenu"
+qrcode_extension="$project/_extensions/jmbuhr/qrcode"
+iconify_extension="$project/_extensions/mcanouil/iconify"
+
+require_file "$fs_extension/_extension.yml"
+require_file "$fs_extension/title-slide.html"
+require_file "$fs_extension/figures/title_background.png"
+require_file "$fs_extension/figures/fs_logo_blue.svg"
+require_file "$simplemenu_extension/_extension.yml"
+require_file "$simplemenu_extension/simplemenu.js"
+require_file "$simplemenu_extension/simplemenu.css"
+require_file "$simplemenu_extension/LICENSE"
 require_absent "$project/_extensions/simplemenu"
 require_not_grep 'quarto-simplemenu' "$project/Makefile"
-for extension in qrcode iconify; do
-  require_file "$project/_extensions/$extension/_extension.yml"
-done
+require_file "$qrcode_extension/_extension.yml"
+require_file "$iconify_extension/_extension.yml"
 require_absent "$project/copier.yml"
 require_absent "$project/copier-template"
 require_absent "$project/tests/copier"
 require_absent "$invocation_dir/_extensions"
-require_absent "$repo_root/_extensions/qrcode"
-require_absent "$repo_root/_extensions/iconify"
+require_absent "$repo_root/_extensions/jmbuhr/qrcode"
+require_absent "$repo_root/_extensions/mcanouil/iconify"
 
 (cd "$project" && quarto render)
 html="$project/_site/presentation.html"
 require_file "$html"
-require_presentation_style "$project" "$html"
+require_presentation_style "$project" "$html" "$fs_extension"
 for group in Introduction "Main idea" Conclusion; do
   require_html_attribute_count "$html" section data-name "$group" 1
 done
@@ -112,11 +129,11 @@ require_grep 'currentSlide.appendChild(logo)' "$html"
 # Simplemenu must be a registered Reveal plugin, not merely a filter that emits
 # dormant markup. Its shared extension defaults also keep generated projects
 # and the repository example from drifting apart.
-require_grep '^section-divs: true$' "$project/_extensions/fs-ise-presentation/_extension.yml"
-require_grep '^revealjs-plugins:' "$project/_extensions/fs-ise-presentation/_extension.yml"
-require_grep '^[[:space:]]*- simplemenu$' "$project/_extensions/fs-ise-presentation/_extension.yml"
+require_grep '^section-divs: true$' "$fs_extension/_extension.yml"
+require_grep '^revealjs-plugins:' "$fs_extension/_extension.yml"
+require_grep '^[[:space:]]*- simplemenu$' "$fs_extension/_extension.yml"
 require_grep "<div class='menubar'><ul class='menu'></ul><div class='slide-number'></div></div>" \
-  "$project/_extensions/fs-ise-presentation/_extension.yml"
+  "$fs_extension/_extension.yml"
 require_not_grep '^[[:space:]]*filters:' "$project/_quarto.yml"
 
 # Check the referenced resources through an HTTP server, as preview/publishing
@@ -136,7 +153,7 @@ require_not_grep '^[[:space:]]*filters:' "$project/_quarto.yml"
 
 # A document-level image replaces the extension default without changing the
 # generated extension or adding a second copy of its assets.
-cp "$project/_extensions/fs-ise-presentation/figures/title_background.png" "$project/figures/override.png"
+cp "$fs_extension/figures/title_background.png" "$project/figures/override.png"
 python - "$project/presentation.qmd" <<'PY'
 from pathlib import Path
 import sys
