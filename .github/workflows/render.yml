@@ -79,6 +79,10 @@ jobs:
               raise SystemExit("Missing local HTML resources: " + ", ".join(missing))
           PY
 
+          # Check image-specific attributes (including Reveal background and
+          # lazy-loading attributes) against the exact Pages artifact.
+          python tests/check-published-images.py "$distribution"
+
       - name: Upload presentation artifact
         uses: actions/upload-artifact@v4
         with:
@@ -105,9 +109,15 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Publish example presentation
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify images on GitHub Pages
+        run: python tests/check-published-images.py "${{ steps.deployment.outputs.page_url }}"
 
   generation:
     runs-on: ubuntu-latest

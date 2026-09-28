@@ -48,10 +48,11 @@ to open it.
 
 ## Visual identity
 
-![Frankfurt School logo supplied by the extension](_extensions/fs-ise-presentation/figures/fs_logo_blue.svg){fig-alt="Frankfurt School logo in blue" width="55%"}
-
-The extension packages its logo and applies FS typography, colors, header,
-progress bar, and slide numbering automatically.
+- **Typography:** Source Sans Pro keeps headings and body copy clear.
+- **Brand colours:** Frankfurt blue (`#002EFF`) accents the progress bar,
+  with dark blue (`#003366`) for the slide number.
+- **Navigation:** The section menu and progress bar show where you are.
+- **Slide numbering:** The current position appears automatically.
 
 ## A model in one line
 
