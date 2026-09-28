@@ -13,8 +13,16 @@ contributes:
       height: 900
       lazy-load: true
       slide-number: true
+      section-divs: true
       auto-stretch: false
       slide-level: 2
+      simplemenu:
+        barhtml:
+          header: ""
+          footer: "<div class='menubar'><ul class='menu'></ul><div class='slide-number'></div></div>"
+        scale: 0.67
+      revealjs-plugins:
+        - simplemenu
       format-resources:
         # Quarto copies an individually listed extension resource by basename.
         # Listing the directory preserves `figures/` in the project and output.

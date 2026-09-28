@@ -4,14 +4,7 @@ subtitle: "The full-bleed cover is supplied automatically by the extension"
 author: "Your Name"
 date: today
 format:
-  fs-ise-presentation-revealjs:
-    filters:
-      - simplemenu
-    simplemenu:
-      barhtml:
-        footer: |
-          <div class="menubar"><ul class="menu"></ul></div>
-      auto: true
+  fs-ise-presentation-revealjs: default
 ---
 
 # Introduction {data-name="Introduction"}

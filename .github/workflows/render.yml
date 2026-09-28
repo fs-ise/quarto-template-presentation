@@ -32,8 +32,14 @@ jobs:
           set -euo pipefail
           test -f template.html
           grep -q 'class="fs-cover-logo"' template.html
-          grep -q 'left: 6%' template.html
+          grep -q -- '--fs-logo-width: 220px' template.html
+          grep -q 'left: var(--fs-edge-inset)' template.html
           test "$(grep -c 'src="figures/fs_logo_blue.svg"' template.html)" -eq 2
+          grep -qi 'simplemenu' template.html
+          grep -q 'class="menubar"' template.html
+          for group in Introduction Formatting Examples; do
+            grep -q "data-name=.$group." template.html
+          done
           test -f figures/fs_logo_blue.svg
           test -f figures/title_background.png
           test -d template_files

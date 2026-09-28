@@ -39,6 +39,7 @@ grep -q 'data-background-position="center"' "$html"
 grep -q 'class="fs-cover-logo"' "$html"
 test "$(grep -c 'src="figures/fs_logo_blue.svg"' "$html")" -eq 2
 grep -q 'class="menubar"' "$html"
+grep -qi 'simplemenu' "$html"
 for group in Introduction "Main idea" Conclusion; do
   grep -q "data-name=.$group." "$html"
 done
@@ -57,14 +58,24 @@ done
 grep -q 'classList.toggle' "$html"
 grep -q 'html.fs-cover-visible #fs-header' "$html"
 grep -q 'section.fs-cover .fs-cover-logo' "$html"
-grep -q 'left: 6%' "$html"
-grep -q 'width: 220px' "$html"
+grep -q -- '--fs-logo-width: 220px' "$html"
+grep -q 'left: var(--fs-edge-inset)' "$html"
+grep -q 'width: var(--fs-logo-width)' "$html"
 grep -q 'width: 54%' "$html"
 grep -q 'html.fs-cover-visible .slide-number' "$html"
 grep -q 'html.fs-cover-visible #custom-slide-number' "$html"
 grep -q 'html.fs-cover-visible .reveal .progress' "$html"
 grep -q 'html.fs-cover-visible .menubar' "$html"
 grep -Eq 'slideNumber: (true|"c/?t?")' "$html"
+
+# Simplemenu must be a registered Reveal plugin, not merely a filter that emits
+# dormant markup. Its shared extension defaults also keep generated projects
+# and the repository example from drifting apart.
+grep -q 'section-divs: true' "$project/_extensions/fs-ise-presentation/_extension.yml"
+grep -A1 'revealjs-plugins:' "$project/_extensions/fs-ise-presentation/_extension.yml" | grep -q simplemenu
+grep -q "<div class='menubar'><ul class='menu'></ul><div class='slide-number'></div></div>" \
+  "$project/_extensions/fs-ise-presentation/_extension.yml"
+! grep -q 'filters:' "$project/_quarto.yml"
 
 # Check the referenced resources through an HTTP server, as preview/publishing
 # accesses them, rather than treating a successful render as sufficient.

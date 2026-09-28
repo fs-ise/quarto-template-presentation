@@ -13,7 +13,8 @@ The repository example also uses
 cloning the repository, install that filter once with
 `quarto add martinomagnifico/quarto-simplemenu --no-prompt`; the project
 configuration then renders its Introduction, Formatting, and Examples groups
-as the navigation menu.
+as the navigation menu. Simplemenu is registered as a reveal.js plugin by the
+presentation extension; documents should not also add it to `filters`.
 
 ## Cover page
 
@@ -113,9 +114,11 @@ published `fs-ise-presentation` extension as well as
 [Simplemenu](https://github.com/martinomagnifico/quarto-simplemenu),
 [QRcode](https://github.com/jmbuhr/quarto-qrcode), and
 [Iconify](https://github.com/mcanouil/quarto-iconify) into `_extensions/`.
-Simplemenu is configured as a bottom menu and automatically derives its links
-from slide sections. Third-party sources are not duplicated in the Copier
-template.
+Simplemenu is configured once in the presentation extension as a bottom menu
+and automatically derives its links from level-one slide sections. The same
+settings therefore apply to the repository example and generated projects,
+without duplicate document or project configuration. Third-party sources are
+not duplicated in the Copier template.
 The generated project includes `presentation.qmd`, `_quarto.yml`, `README.md`,
 `Makefile`, and a `figures/` directory. For unattended generation, provide
 answers with Copier's `--data` options and pass `--trust`.
@@ -171,6 +174,8 @@ and supplies these defaults from its manifest:
 | `height` | `900` | Sets the logical slide height. |
 | `lazy-load` | `true` | Lazily loads supported media. |
 | `slide-number` | `true` | Displays slide numbers. |
+| `section-divs` | `true` | Preserves level-one groups for Simplemenu navigation. |
+| `revealjs-plugins` | `[simplemenu]` | Registers and initializes Simplemenu with reveal.js. |
 | `auto-stretch` | `false` | Prevents automatic stretching of media. |
 | `slide-level` | `2` | Starts a new slide at each level-two heading. |
 | `template-partials` | `title-slide.html` | Builds the reusable full-bleed cover. |
