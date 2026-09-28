@@ -25,3 +25,38 @@ jobs:
 
       - name: Verify rendered output
         run: test -f template.html
+
+  generation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: "1.8.0"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Copier
+        run: python -m pip install copier
+
+      - name: Generate and render a Copier project
+        run: tests/copier/smoke.sh
+
+      - name: Verify the Quarto template excludes Copier files
+        shell: bash
+        run: |
+          set -euo pipefail
+          output=$(mktemp -d)
+          cd "$output"
+          quarto use template "$GITHUB_WORKSPACE" --no-prompt
+          test -f template.qmd
+          test -d _extensions/fs-ise-presentation
+          test ! -e copier.yml
+          test ! -e copier-template
+          test ! -e tests/copier

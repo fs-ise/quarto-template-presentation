@@ -1,0 +1,38 @@
+# {{ project_name }}
+
+This reveal.js presentation uses the
+[`fs-ise-presentation`](https://github.com/fs-ise/quarto-template-presentation)
+Quarto extension.
+
+## Work on the presentation
+
+```bash
+quarto preview presentation.qmd
+```
+
+Render the project with:
+
+```bash
+quarto render
+```
+
+The rendered site is written to `_site/`.
+
+## Update dependencies
+
+Update the presentation extension independently of this project's files:
+
+```bash
+quarto update extension fs-ise/quarto-template-presentation
+```
+
+Update the Copier-managed scaffolding from the project directory:
+
+```bash
+copier update --trust
+```
+
+`presentation.qmd` is intentionally protected from Copier updates, so your
+slides remain yours. Copier records the template version and your answers in
+`.copier-answers.yml`; commit that file so future updates can reproduce the
+project.

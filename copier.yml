@@ -1,0 +1,27 @@
+_subdirectory: copier-template
+_answers_file: .copier-answers.yml
+_skip_if_exists:
+  - presentation.qmd
+_tasks:
+  - command: "quarto add fs-ise/quarto-template-presentation --no-prompt"
+    when: "{{ _copier_operation == 'copy' }}"
+
+project_name:
+  type: str
+  help: Name of the Quarto project
+  default: My presentation
+
+presentation_title:
+  type: str
+  help: Title shown on the presentation
+  default: "{{ project_name }}"
+
+author:
+  type: str
+  help: Presentation author
+  default: Your Name
+
+subtitle:
+  type: str
+  help: Optional presentation subtitle (leave blank to omit)
+  default: ""

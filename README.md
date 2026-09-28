@@ -12,8 +12,21 @@ demonstrates the format's main features.
 
 - [Quarto](https://quarto.org/docs/get-started/) **1.8.0 or newer**, as required
   by the extension manifest.
+- [Copier](https://copier.readthedocs.io/) is needed only for the configurable
+  project workflow. Install it with `pipx install copier` (recommended) or
+  `python -m pip install --user copier`.
 
-No additional language runtime or package manager is required.
+Copier is not required to install the extension or use the simple Quarto
+template.
+
+## Choose a workflow
+
+The repository supports three independent workflows:
+
+| Goal | Command |
+| --- | --- |
+| Add the styling to an existing Quarto project | `quarto add fs-ise/quarto-template-presentation`             |
+| Create a new presentation project             | `copier copy gh:fs-ise/quarto-template-presentation my-talk` |
 
 ## Create a new presentation from the template
 
@@ -49,6 +62,31 @@ format: fs-ise-presentation-revealjs
 
 Use level-two headings (`##`) for slides because the extension's slide level
 is fixed to level 2 by default.
+
+## Create a configurable project with Copier
+
+Copier prompts for a project name, presentation title, author, and optional
+subtitle:
+
+```bash
+copier copy gh:fs-ise/quarto-template-presentation my-talk
+cd my-talk
+quarto render
+```
+
+Approve the trusted template task when prompted. It runs `quarto add` to
+install the published extension into the new project's `_extensions/`
+directory; the extension source is not duplicated in the Copier template.
+The generated project includes `presentation.qmd`, `_quarto.yml`, `README.md`,
+`Makefile`, and a `figures/` directory. For unattended generation, provide
+answers with Copier's `--data` options and pass `--trust`.
+
+To preview while editing:
+
+```bash
+cd my-talk
+quarto preview presentation.qmd
+```
 
 ## Render and preview
 
@@ -121,3 +159,25 @@ compare it with [`template.qmd`](template.qmd) and adopt those changes manually.
 
 Commit `_extensions/fs-ise-presentation/` with your project when you want builds
 to use the same extension version everywhere.
+
+### Update a Copier-generated project
+
+The Quarto extension and Copier scaffolding have separate update lifecycles.
+From the generated project's root, update the installed styling with:
+
+```bash
+quarto update extension fs-ise/quarto-template-presentation
+```
+
+Update generated support files from this Copier template with:
+
+```bash
+copier update --trust
+```
+
+Copier stores the template source and answers in `.copier-answers.yml` and
+merges scaffold changes with local changes. In addition, `presentation.qmd` is
+marked to be skipped on updates so scaffold refreshes do not overwrite slide
+content. Review and commit update results as usual. The generated Makefile
+provides the equivalent `make update-extension` and `make update-template`
+shortcuts.
