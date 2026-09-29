@@ -30,8 +30,10 @@ def logo_position(page):
       const reveal = document.querySelector('.reveal').getBoundingClientRect();
       const canvas = document.querySelector('.reveal .slides').getBoundingClientRect();
       const box = logo.getBoundingClientRect();
-      const imageBox = logo.querySelector('img').getBoundingClientRect();
-      const source = await (await fetch(logo.querySelector('img').src)).text();
+      const image = logo.querySelector('img');
+      const imageBox = image.getBoundingClientRect();
+      const imageStyle = getComputedStyle(image);
+      const source = await (await fetch(image.src)).text();
       const parsed = new DOMParser().parseFromString(source, 'image/svg+xml').documentElement;
       parsed.style.cssText = 'position:absolute;visibility:hidden';
       document.body.appendChild(parsed);
@@ -55,6 +57,12 @@ def logo_position(page):
         revealScale: Reveal.getScale(),
         logoBox: {left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height},
         imageBox: {left: imageBox.left, top: imageBox.top, right: imageBox.right, bottom: imageBox.bottom, width: imageBox.width, height: imageBox.height},
+        imageMargins: {
+          top: imageStyle.marginTop,
+          right: imageStyle.marginRight,
+          bottom: imageStyle.marginBottom,
+          left: imageStyle.marginLeft
+        },
         artwork: {x: artwork.x, y: artwork.y, width: artwork.width, height: artwork.height},
         visibleArtwork: visible,
         visible: getComputedStyle(logo).display !== 'none',
@@ -63,6 +71,9 @@ def logo_position(page):
     }""")
     assert result["visible"], "shared content logo is not visible"
     assert result["directChild"], f"content logo is not a direct child of Reveal: {result}"
+    assert all(value == "0px" for value in result["imageMargins"].values()), (
+        f"content logo image retains a computed margin: {result}"
+    )
     return result
 
 
@@ -75,7 +86,7 @@ def assert_logo_at_fixed_top_right(page):
     page.wait_for_timeout(150)
     vertical_next = logo_position(page)
     for key in ("right", "top"):
-        assert 4.5 <= first[key] <= 8.5, f"visible logo artwork is not approximately 5--8px from Reveal: {first}"
+        assert first[key] == pytest.approx(5, abs=0.75), f"visible logo artwork is not approximately 5px from Reveal: {first}"
         assert abs(first[key] - vertical_start[key]) < 1.5, f"logo {key} moved between horizontal slides: {first} -> {vertical_start}"
         assert abs(vertical_start[key] - vertical_next[key]) < 1.5, f"logo {key} moved during vertical navigation: {vertical_start} -> {vertical_next}"
     heading = page.locator("section.present h1, section.present h2").first.bounding_box()
