@@ -9,3 +9,9 @@ contributes:
         - simplemenu.js
       stylesheet:
         - simplemenu.css
+      config:
+        simplemenu:
+          barhtml:
+            header: ""
+            footer: "<div class='menubar'><ul class='menu'></ul><div class='slide-number'></div></div>"
+          scale: 0.67

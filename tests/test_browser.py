@@ -85,6 +85,12 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
         try:
             page.goto(f"{origin}/{canonical_html.name}", wait_until="networkidle")
             page.wait_for_function("window.Reveal && Reveal.isReady()")
+            runtime_config = page.evaluate("Reveal.getConfig().simplemenu")
+            assert isinstance(runtime_config, dict), f"Simplemenu runtime configuration is missing: {browser_state(page)}"
+            expected_footer = "<div class='menubar'><ul class='menu'></ul><div class='slide-number'></div></div>"
+            assert runtime_config.get("barhtml", {}).get("footer") == expected_footer, (
+                f"Simplemenu runtime footer is wrong: {runtime_config!r}; state={browser_state(page)}"
+            )
             page.wait_for_function("document.querySelectorAll('.menubar .menu li').length >= 3")
 
         # Cover has its own top-left mark and suppresses the shared mark.
@@ -98,18 +104,21 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert not page.locator("#fs-header").is_visible()
             page.keyboard.press("ArrowRight")
             page.wait_for_timeout(150)
-            assert_logo_at_fixed_top_right(page)
 
             groups = page.locator(".menubar .menu li").all_inner_texts()
             assert {"Introduction", "Formatting", "Examples"}.issubset(set(groups)), f"Simplemenu groups are wrong: {groups}; state={browser_state(page)}"
             assert page.locator(".menubar").is_visible(), "Simplemenu did not initialize"
+            introduction = page.locator(".menubar .menu li", has_text="Introduction")
+            assert "active" in (introduction.get_attribute("class") or "").split(), "Introduction is not the active section"
             numbers = page.locator(".slide-number:visible")
             assert numbers.count(), "slide number is not visible on content slides"
             assert "/" in numbers.first.inner_text(), "Simplemenu did not update the slide number"
+            number_before = numbers.first.inner_text()
             before = page.evaluate("Reveal.getIndices()")
-            page.keyboard.press("ArrowRight")
-            page.wait_for_timeout(100)
-            assert page.evaluate("Reveal.getIndices()") != before, "keyboard navigation did not advance the presentation"
+            assert_logo_at_fixed_top_right(page)
+            assert page.evaluate("Reveal.getIndices()") != before, "navigation did not advance the presentation"
+            assert numbers.first.inner_text() != number_before, "Simplemenu did not update the slide number during navigation"
+            assert page.locator(".menubar .menu li.active").inner_text() == "Formatting", "Formatting is not the active section"
             assert not exceptions, f"uncaught browser exceptions: {exceptions}; state={browser_state(page)}"
             assert not failed, f"browser failed to load resources: {failed}"
         except Exception:

@@ -11,8 +11,8 @@ pytestmark = pytest.mark.static
 
 
 def test_extension_manifest_and_embedded_dependency():
-    assert_manifest(EXTENSION / "_extension.yml")
     embedded = EXTENSION / "_extensions/simplemenu"
+    assert_manifest(EXTENSION / "_extension.yml", embedded / "_extension.yml")
     dependency = load_yaml(embedded / "_extension.yml")
     assert dependency.get("title")
     for filename in ("simplemenu.js", "simplemenu.css", "LICENSE"):
@@ -25,7 +25,7 @@ def test_negative_missing_simplemenu_dependency(tmp_path):
     broken = tmp_path / "_extension.yml"
     broken.write_text(__import__("yaml").safe_dump(manifest))
     try:
-        assert_manifest(broken)
+        assert_manifest(broken, EXTENSION / "_extensions/simplemenu/_extension.yml")
     except AssertionError as error:
         assert "Simplemenu" in str(error)
     else:
@@ -38,8 +38,17 @@ def test_negative_disabled_slide_numbering(tmp_path):
     broken = tmp_path / "_extension.yml"
     broken.write_text(__import__("yaml").safe_dump(manifest))
     try:
-        assert_manifest(broken)
+        assert_manifest(broken, EXTENSION / "_extensions/simplemenu/_extension.yml")
     except AssertionError as error:
         assert "number" in str(error)
     else:
         raise AssertionError("manifest check accepted disabled slide numbering")
+
+
+def test_negative_simplemenu_config_in_format_is_detected(tmp_path):
+    manifest = load_yaml(EXTENSION / "_extension.yml")
+    manifest["contributes"]["formats"]["revealjs"]["simplemenu"] = {"scale": 0.67}
+    broken = tmp_path / "_extension.yml"
+    broken.write_text(__import__("yaml").safe_dump(manifest))
+    with pytest.raises(AssertionError, match="plugin declaration"):
+        assert_manifest(broken, EXTENSION / "_extensions/simplemenu/_extension.yml")
