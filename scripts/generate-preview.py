@@ -79,43 +79,81 @@ def generate_preview(source: Path, output: Path) -> None:
         raise RuntimeError(f"rendered presentation does not exist: {source}")
 
     failed_requests: list[str] = []
+    browser_messages: list[str] = []
     with local_server(source.parent) as origin, sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page(viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1)
-        page.on("requestfailed", lambda request: failed_requests.append(request.url))
+        page.on(
+            "requestfailed",
+            lambda request: failed_requests.append(
+                f"{request.url} ({request.failure or 'unknown request failure'})"
+            ),
+        )
         page.on("response", lambda response: failed_requests.append(f"{response.status} {response.url}") if response.status >= 400 else None)
+        page.on("console", lambda message: browser_messages.append(f"{message.type}: {message.text}"))
+        page.on("pageerror", lambda error: browser_messages.append(f"page error: {error}"))
         try:
             url = f"{origin}/{quote(source.name)}"
             page.goto(url, wait_until="networkidle", timeout=60_000)
             page.wait_for_function("window.Reveal && Reveal.isReady()", timeout=30_000)
             page.evaluate("Reveal.slide(0, 0); Reveal.layout()")
 
-            # Fonts, ordinary images, and CSS background images can finish after
-            # Reveal's ready event. Decode all of them before taking the shot.
+            # Reveal creates background elements lazily. Only validate assets
+            # needed by the cover; later slides may intentionally refer to
+            # resources that are not relevant to the preview.
             page.evaluate("""async () => {
               await document.fonts.ready;
-              const urls = new Set();
-              for (const element of document.querySelectorAll('*')) {
-                for (const pseudo of [null, '::before', '::after']) {
-                  const value = getComputedStyle(element, pseudo).backgroundImage;
-                  for (const match of value.matchAll(/url\\(["']?(.*?)["']?\\)/g)) {
-                    if (match[1]) urls.add(match[1]);
-                  }
-                }
-              }
-              const images = [...document.images].map(image => image.complete
-                ? image.decode()
-                : new Promise((resolve, reject) => {
+
+              const fail = (kind, url, detail) => {
+                throw new Error(`${kind} failed to load: ${url || '<missing URL>'}` +
+                  (detail ? ` (${detail})` : ''));
+              };
+              const waitForImage = async (image, kind) => {
+                const url = image.currentSrc || image.src;
+                if (!image.complete) {
+                  await new Promise((resolve, reject) => {
                     image.addEventListener('load', resolve, {once: true});
-                    image.addEventListener('error', reject, {once: true});
-                  }));
-              const backgrounds = [...urls].map(url => new Promise((resolve, reject) => {
+                    image.addEventListener('error', () => reject(
+                      new Error(`${kind} failed to load: ${url || '<missing URL>'}`)
+                    ), {once: true});
+                  });
+                }
+                if (!image.naturalWidth) fail(kind, url, 'image is complete but empty');
+                try {
+                  await image.decode();
+                } catch (error) {
+                  fail(kind, url, error instanceof Error ? error.message : String(error));
+                }
+              };
+              const loadUrl = (url, kind) => new Promise((resolve, reject) => {
                 const image = new Image();
                 image.onload = resolve;
-                image.onerror = reject;
+                image.onerror = () => reject(new Error(`${kind} failed to load: ${url}`));
                 image.src = url;
-              }));
-              await Promise.all([...images, ...backgrounds]);
+              });
+
+              const cover = document.querySelector('.reveal .slides > section.present.fs-cover');
+              if (!cover) throw new Error('title slide did not become the active Reveal slide');
+              const logo = cover.querySelector('img.fs-cover-logo');
+              if (!logo) throw new Error('cover logo element is missing');
+
+              const background = document.querySelector('.reveal .backgrounds .slide-background.present');
+              if (!background) throw new Error('title-slide background element is missing');
+              const backgroundLayers = [background, ...background.querySelectorAll('*')];
+              const backgroundImage = backgroundLayers
+                .map(element => getComputedStyle(element).backgroundImage)
+                .find(value => value && value !== 'none');
+              if (!backgroundImage) throw new Error('title-slide background image URL is missing');
+              const match = backgroundImage.match(/url\\(["']?(.*?)["']?\\)/);
+              const backgroundUrl = match && match[1];
+              if (!backgroundUrl) {
+                throw new Error('title-slide background image URL is missing');
+              }
+
+              await Promise.all([
+                waitForImage(logo, 'cover logo'),
+                loadUrl(backgroundUrl, 'title-slide background'),
+              ]);
               await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
             }""")
 
@@ -124,11 +162,17 @@ def generate_preview(source: Path, output: Path) -> None:
             box = slide.bounding_box()
             if not box or box["x"] < -1 or box["y"] < -1 or box["x"] + box["width"] > WIDTH + 1 or box["y"] + box["height"] > HEIGHT + 1:
                 raise RuntimeError(f"title slide is not fully visible in the viewport: {box}")
-            if failed_requests:
-                raise RuntimeError("assets failed to load: " + ", ".join(sorted(set(failed_requests))))
-
             output.parent.mkdir(parents=True, exist_ok=True)
             page.screenshot(path=output, type="png", animations="disabled")
+        except Exception as error:
+            diagnostics = []
+            if failed_requests:
+                diagnostics.append("Failed requests:\n  " + "\n  ".join(sorted(set(failed_requests))))
+            if browser_messages:
+                diagnostics.append("Browser diagnostics:\n  " + "\n  ".join(browser_messages))
+            if diagnostics:
+                raise RuntimeError(f"{error}\n" + "\n".join(diagnostics)) from error
+            raise
         finally:
             browser.close()
 
