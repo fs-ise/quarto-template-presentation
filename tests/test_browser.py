@@ -188,7 +188,9 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             qr = page.locator('section.present svg[data-qrcode-value="https://example.com"]')
             assert qr.is_visible(), "final QR code is not visible"
             qr_box = qr.bounding_box()
-            slide_box = page.locator("section.present").bounding_box()
+            slide_box = page.locator(
+                ".reveal .slides section.present:not(.stack)"
+            ).bounding_box()
             assert qr_box and slide_box
             assert qr_box["x"] + qr_box["width"] / 2 == pytest.approx(
                 slide_box["x"] + slide_box["width"] / 2, abs=2
