@@ -92,11 +92,11 @@ flowchart LR
 ```
 :::
 
-## Thank you!
+## Thank you! {.fs-qr-slide}
 
 Questions?
 
-::: {style="text-align: center;"}
+::: {.fs-qr-content}
 {{< qrcode https://example.com >}}
 
 [https://example.com](https://example.com)

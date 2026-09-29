@@ -131,6 +131,23 @@ html.fs-cover-visible .slide-menu-button {
   padding-right: var(--fs-logo-clearance) !important;
 }
 
+/* The closing QR slide uses the whole canvas so its code is truly centred.
+   Only the heading retains logo clearance; the QR content starts beneath it
+   and can therefore be laid out against the full slide width safely. */
+.reveal .slides section.fs-qr-slide {
+  padding-right: 0 !important;
+}
+
+.reveal .slides section.fs-qr-slide > h2 {
+  box-sizing: border-box;
+  padding-right: var(--fs-logo-clearance);
+}
+
+.reveal .slides section.fs-qr-slide > .fs-qr-content {
+  width: 100%;
+  text-align: center;
+}
+
 /* Top-right decorative logo */
 .reveal .slides > #fs-header {
   position: absolute;
