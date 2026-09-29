@@ -13,5 +13,5 @@ contributes:
         simplemenu:
           barhtml:
             header: ""
-            footer: "<div class='menubar'><ul class='menu'></ul><div class='slide-number'></div></div>"
-          scale: 0.67
+            footer: "<nav class='menubar' aria-label='Presentation sections'><ul class='menu'></ul><span class='menu-slide-number' aria-label='Slide number'></span></nav>"
+          scale: 0.5

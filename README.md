@@ -27,6 +27,19 @@ quarto add fs-ise/quarto-template-presentation
 
 Use `format: fs-ise-presentation-revealjs` in the document's YAML metadata. Simplemenu is included in the extension.
 
+Organize the deck with level-one section stacks and level-two slides. Add
+`data-stack-name` to every section that should appear in the bottom menu:
+
+```markdown
+# Introduction {data-stack-name="Introduction"}
+
+## First slide
+```
+
+Copier projects also install the QR-code extension automatically. Their final
+slide includes a working `{{< qrcode https://fs-ise.github.io/quarto-template-presentation/ >}}`
+example; replace that URL with the destination for your presentation.
+
 ## Render
 
 From a Copier-generated project:

@@ -32,17 +32,17 @@ def test_negative_missing_simplemenu_dependency(tmp_path):
         raise AssertionError("manifest check accepted a missing Simplemenu dependency")
 
 
-def test_negative_disabled_slide_numbering(tmp_path):
+def test_negative_duplicate_reveal_slide_numbering(tmp_path):
     manifest = load_yaml(EXTENSION / "_extension.yml")
-    manifest["contributes"]["formats"]["revealjs"]["slide-number"] = False
+    manifest["contributes"]["formats"]["revealjs"]["slide-number"] = True
     broken = tmp_path / "_extension.yml"
     broken.write_text(__import__("yaml").safe_dump(manifest))
     try:
         assert_manifest(broken, EXTENSION / "_extensions/simplemenu/_extension.yml")
     except AssertionError as error:
-        assert "number" in str(error)
+        assert "duplicate slide number" in str(error)
     else:
-        raise AssertionError("manifest check accepted disabled slide numbering")
+        raise AssertionError("manifest check accepted duplicate Reveal slide numbering")
 
 
 def test_negative_simplemenu_config_in_format_is_detected(tmp_path):

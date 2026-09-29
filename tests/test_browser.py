@@ -63,8 +63,8 @@ def browser_state(page):
       plugins: window.Reveal ? Object.keys(Reveal.getPlugins()) : [],
       simplemenu: window.Reveal ? Reveal.getConfig().simplemenu : null,
       menu: [...document.querySelectorAll('.menubar')].map(x => x.outerHTML),
-      sections: [...document.querySelectorAll('section[data-name]')].map(x => ({
-        name: x.dataset.name, id: x.id, parent: x.parentElement && x.parentElement.tagName
+      sections: [...document.querySelectorAll('section[data-stack-name]')].map(x => ({
+        name: x.dataset.stackName, id: x.id, parent: x.parentElement && x.parentElement.tagName
       }))
     })""")
 
@@ -87,7 +87,7 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             page.wait_for_function("window.Reveal && Reveal.isReady()")
             runtime_config = page.evaluate("Reveal.getConfig().simplemenu")
             assert isinstance(runtime_config, dict), f"Simplemenu runtime configuration is missing: {browser_state(page)}"
-            expected_footer = "<div class='menubar'><ul class='menu'></ul><div class='slide-number'></div></div>"
+            expected_footer = "<nav class='menubar' aria-label='Presentation sections'><ul class='menu'></ul><span class='menu-slide-number' aria-label='Slide number'></span></nav>"
             assert runtime_config.get("barhtml", {}).get("footer") == expected_footer, (
                 f"Simplemenu runtime footer is wrong: {runtime_config!r}; state={browser_state(page)}"
             )
@@ -102,6 +102,7 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert 0 <= cover_box["x"] - canvas_box["x"] <= 30, "cover logo is not at the upper-left edge"
             assert 0 <= cover_box["y"] - canvas_box["y"] <= 30, "cover logo is not at the upper-left edge"
             assert not page.locator("#fs-header").is_visible()
+            assert not page.locator(".menubar").is_visible()
             page.keyboard.press("ArrowRight")
             page.wait_for_timeout(150)
 
@@ -110,7 +111,7 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert page.locator(".menubar").is_visible(), "Simplemenu did not initialize"
             introduction = page.locator(".menubar .menu li", has_text="Introduction")
             assert "active" in (introduction.get_attribute("class") or "").split(), "Introduction is not the active section"
-            numbers = page.locator(".slide-number:visible")
+            numbers = page.locator(".menu-slide-number:visible")
             assert numbers.count(), "slide number is not visible on content slides"
             assert "/" in numbers.first.inner_text(), "Simplemenu did not update the slide number"
             number_before = numbers.first.inner_text()

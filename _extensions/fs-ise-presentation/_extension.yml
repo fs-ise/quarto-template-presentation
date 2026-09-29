@@ -12,7 +12,8 @@ contributes:
       width: 1600
       height: 900
       lazy-load: true
-      slide-number: true
+      # Simplemenu renders the single slide counter in the navigation bar.
+      slide-number: false
       section-divs: true
       auto-stretch: false
       slide-level: 2

@@ -7,7 +7,7 @@ format:
   fs-ise-presentation-revealjs: default
 ---
 
-# Introduction {data-name="Introduction"}
+# Introduction {data-stack-name="Introduction"}
 
 ## A focused story
 
@@ -24,7 +24,7 @@ Speaker notes are visible in presenter view. Press **S** during a presentation
 to open it.
 :::
 
-# Formatting {data-name="Formatting"}
+# Formatting {data-stack-name="Formatting"}
 
 ## Two perspectives
 
@@ -64,7 +64,7 @@ $$
 
 Inline notation such as $n \ge 1$ works alongside display mathematics.
 
-# Examples {data-name="Examples"}
+# Examples {data-stack-name="Examples"}
 
 ## Reproducible snippets
 
@@ -97,6 +97,7 @@ Copier projects also install QR-code and Iconify extensions. Examples:
 
 ## Charts
 
+::: {.fs-centered-diagram}
 ```{mermaid}
 flowchart LR
     A[Christmas] -->|Get money| B(Go shopping)
@@ -105,3 +106,4 @@ flowchart LR
     C -->|Two| E[iPhone]
     C -->|Three| F[fa:fa-car Car]
 ```
+:::

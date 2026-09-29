@@ -18,7 +18,7 @@ def assert_rendered_presentation(html):
 def test_canonical_example_rendering(canonical_html):
     assert_rendered_presentation(canonical_html)
     for group in ("Introduction", "Formatting", "Examples"):
-        assert len(elements(canonical_html, "section", data_name=group)) == 1, f"expected one {group} section"
+        assert len(elements(canonical_html, "section", data_stack_name=group)) == 1, f"expected one {group} section"
 
 
 @pytest.mark.integration
