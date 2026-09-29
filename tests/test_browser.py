@@ -85,8 +85,10 @@ def assert_logo_at_fixed_top_right(page):
     page.evaluate("Reveal.slide(2, 1)")
     page.wait_for_timeout(150)
     vertical_next = logo_position(page)
-    for key in ("right", "top"):
-        assert first[key] == pytest.approx(5, abs=0.75), f"visible logo artwork is not approximately 5px from Reveal: {first}"
+    for key, expected in (("right", 32), ("top", 24)):
+        assert first[key] == pytest.approx(expected, abs=0.75), (
+            f"visible logo artwork does not have the expected {key} inset: {first}"
+        )
         assert abs(first[key] - vertical_start[key]) < 1.5, f"logo {key} moved between horizontal slides: {first} -> {vertical_start}"
         assert abs(vertical_start[key] - vertical_next[key]) < 1.5, f"logo {key} moved during vertical navigation: {vertical_start} -> {vertical_next}"
     heading = page.locator("section.present h1, section.present h2").first.bounding_box()
