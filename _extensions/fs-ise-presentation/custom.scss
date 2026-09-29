@@ -13,9 +13,10 @@ $presentation-font-size-root: 36px;
   --fs-cover-logo-width: 224px;
   --fs-content-logo-width: 166px;
   --fs-edge-inset: 12px;
-  /* The SVG contains a little intrinsic whitespace. These offsets put its
-     visible artwork 12--16px from the content-slide edges. */
-  --fs-content-logo-top: 6px;
+  /* The SVG artwork starts 6.97 units below its 75-unit viewBox and ends
+     10.40 units before its right edge. At the displayed width below these
+     offsets put the visible mark about 10px from the slide edges. */
+  --fs-content-logo-top: 3px;
   --fs-content-logo-right: 2px;
   --fs-logo-clearance: 210px;
   --brand-color: #002EFF;   /* Frankfurt blue from the logo */
@@ -73,7 +74,7 @@ $presentation-font-size-root: 36px;
   color: #000000;
   font-family: var(--font-family);
   width: 100%;
-  font-size: 80px;
+  font-size: 72px;
   font-weight: 700;
   line-height: 1.12;
   overflow-wrap: anywhere;

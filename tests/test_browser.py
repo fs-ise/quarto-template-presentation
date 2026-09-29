@@ -25,10 +25,21 @@ def server(directory):
 
 
 def logo_position(page):
-    result = page.locator("#fs-header").evaluate("""logo => {
+    result = page.locator("#fs-header").evaluate("""async logo => {
       const canvas = document.querySelector('.reveal .slides').getBoundingClientRect();
       const box = logo.getBoundingClientRect();
-      return {right: canvas.right - box.right, top: box.top - canvas.top,
+      const source = await (await fetch(logo.querySelector('img').src)).text();
+      const parsed = new DOMParser().parseFromString(source, 'image/svg+xml').documentElement;
+      parsed.style.cssText = 'position:absolute;visibility:hidden';
+      document.body.appendChild(parsed);
+      const artwork = parsed.getBBox();
+      const viewBox = parsed.viewBox.baseVal;
+      parsed.remove();
+      const imageScale = box.width / viewBox.width;
+      const slideScale = canvas.width / 1600;
+      return {
+        right: (canvas.right - box.right + (viewBox.width - artwork.x - artwork.width) * imageScale) / slideScale,
+        top: (box.top - canvas.top + (artwork.y - viewBox.y) * imageScale) / slideScale,
               visible: getComputedStyle(logo).display !== 'none'};
     }""")
     assert result["visible"], "shared content logo is not visible"
@@ -42,8 +53,7 @@ def assert_logo_at_fixed_top_right(page):
     centered = logo_position(page)
     for key in ("right", "top"):
         assert abs(first[key] - centered[key]) < 1.5, f"logo {key} moved on vertically centred section slide: {first} -> {centered}"
-        assert first[key] >= -1, f"logo is outside slide canvas: {first}"
-        assert first[key] <= 30, f"logo is not anchored at the canvas top-right edge: {first}"
+        assert 8 <= first[key] <= 12, f"visible logo artwork is not 8--12px from the slide edge: {first}"
     heading = page.locator("section.present h1, section.present h2").first.bounding_box()
     logo = page.locator("#fs-header").bounding_box()
     if heading and logo:
@@ -83,6 +93,17 @@ def assert_simplemenu_initialized(page, exceptions):
     )
 
 
+def navigation_links_box(page):
+    """Return the union of the clickable links, not the potentially stretched ul."""
+    return page.locator(".menubar .menu a").evaluate_all("""links => {
+      const boxes = links.map(link => link.getBoundingClientRect());
+      return {
+        left: Math.min(...boxes.map(box => box.left)),
+        right: Math.max(...boxes.map(box => box.right))
+      };
+    }""")
+
+
 @pytest.mark.browser
 @pytest.mark.integration
 @pytest.mark.parametrize("viewport", [{"width": 1920, "height": 1080}, {"width": 800, "height": 600}], ids=["fullscreen", "embedded"])
@@ -119,7 +140,7 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert not page.locator(".menubar").is_visible()
             cover_details = page.locator("section.present.fs-cover .fs-cover-details")
             assert cover_details.evaluate("node => node.scrollHeight <= node.clientHeight"), "cover copy overflows vertically"
-            for selector, size in (("h1.title", 80), (".subtitle", 48), (".author", 38), (".date", 32)):
+            for selector, size in (("h1.title", 72), (".subtitle", 48), (".author", 38), (".date", 32)):
                 element = page.locator(f"section.present.fs-cover {selector}")
                 assert element.evaluate("node => parseFloat(getComputedStyle(node).fontSize)") == pytest.approx(size, abs=0.1)
             page.keyboard.press("ArrowRight")
@@ -133,11 +154,11 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert links == {"Introduction": "#/1", "Formatting": "#/2", "Examples": "#/3"}
             assert page.locator(".menubar").is_visible(), "Simplemenu did not initialize"
             footer = page.locator(".menubar").bounding_box()
-            menu = page.locator(".menubar .menu").bounding_box()
-            assert footer and menu
+            assert footer
+            links_box = navigation_links_box(page)
             progress = page.locator(".reveal .progress").bounding_box()
             assert progress and footer["y"] + footer["height"] <= progress["y"] + 1, "footer overlaps the progress bar"
-            assert menu["x"] + menu["width"] / 2 == pytest.approx(
+            assert (links_box["left"] + links_box["right"]) / 2 == pytest.approx(
                 footer["x"] + footer["width"] / 2, abs=1.5
             ), "Simplemenu groups are not horizontally centered"
             menu_button = page.locator(".slide-menu-button")
@@ -240,4 +261,49 @@ def test_negative_incorrect_logo_position_is_detected(canonical_html):
         page.evaluate("document.querySelector('#fs-header').style.transform = 'translateX(-120px)'")
         with pytest.raises(AssertionError):
             assert_logo_at_fixed_top_right(page)
+        browser.close()
+
+
+@pytest.mark.browser
+@pytest.mark.integration
+@pytest.mark.parametrize("viewport", [{"width": 1920, "height": 1080}, {"width": 800, "height": 600}], ids=["fullscreen", "embedded"])
+def test_generated_project_layout_and_controls(generated_html, viewport):
+    """Exercise installed template assets, rather than only the source deck."""
+    with server(generated_html.parent) as origin, sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        page = browser.new_page(viewport=viewport)
+        exceptions = []
+        page.on("pageerror", lambda error: exceptions.append(str(error)))
+        page.goto(f"{origin}/{generated_html.name}", wait_until="networkidle")
+        page.wait_for_function("window.Reveal && Reveal.isReady()")
+        assert_simplemenu_initialized(page, exceptions)
+
+        title_size = page.locator("section.present.fs-cover h1.title").evaluate(
+            "node => parseFloat(getComputedStyle(node).fontSize)"
+        )
+        assert title_size == pytest.approx(72, abs=0.1)
+        assert page.locator("section.present.fs-cover .fs-cover-details").evaluate(
+            "node => node.scrollHeight <= node.clientHeight"
+        ), "generated cover copy overflows vertically"
+
+        page.keyboard.press("ArrowRight")
+        page.wait_for_timeout(150)
+        footer = page.locator(".menubar").bounding_box()
+        links_box = navigation_links_box(page)
+        assert footer
+        assert (links_box["left"] + links_box["right"]) / 2 == pytest.approx(
+            footer["x"] + footer["width"] / 2, abs=1.5
+        ), "generated Simplemenu links are not centered against the full slide"
+        assert_logo_at_fixed_top_right(page)
+
+        menu_button = page.locator(".slide-menu-button")
+        menu_button.click()
+        assert page.locator(".slide-menu").is_visible()
+        page.keyboard.press("Escape")
+        conclusion = page.locator(".menubar .menu li", has_text="Conclusion")
+        conclusion.locator("a").click()
+        page.wait_for_timeout(150)
+        assert "active" in (conclusion.get_attribute("class") or "").split()
+        assert "/" in page.locator(".menu-slide-number:visible").inner_text()
+        assert not exceptions, f"generated presentation raised browser exceptions: {exceptions}"
         browser.close()

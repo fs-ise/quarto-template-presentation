@@ -1,5 +1,9 @@
 /* Simplemenu, copyright Martin Donath, MIT licensed. */
-.menubar {
+/* Include Reveal in these selectors so the layout wins over Reveal's generic
+   list styles regardless of stylesheet order. The equal outer grid tracks
+   centre the links against the complete slide, not the space left between
+   the two controls. */
+.reveal .menubar {
   align-items: center;
   background: #fff;
   border-top: 2px solid #002eff;
@@ -16,9 +20,10 @@
   z-index: 30;
 }
 
-.menubar .menu {
+.reveal .menubar .menu {
   display: flex;
   grid-column: 2;
+  justify-self: center;
   align-items: center;
   gap: 1.8em;
   list-style: none;
@@ -26,25 +31,25 @@
   padding: 0;
 }
 
-.menubar .menu li,
-.menubar .menu a {
+.reveal .menubar .menu li,
+.reveal .menubar .menu a {
   display: block;
 }
 
-.menubar .menu a {
+.reveal .menubar .menu a {
   color: #333;
   padding: 0.25em 0;
   pointer-events: auto;
   text-decoration: none;
 }
 
-.menubar .menu li.active a {
+.reveal .menubar .menu li.active a {
   color: #002eff;
   font-weight: 700;
   box-shadow: inset 0 -0.12em 0 #002eff;
 }
 
-.menubar .menu-slide-number {
+.reveal .menubar .menu-slide-number {
   color: #003366;
   grid-column: 3;
   font-variant-numeric: tabular-nums;
