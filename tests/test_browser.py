@@ -64,9 +64,23 @@ def browser_state(page):
       simplemenu: window.Reveal ? Reveal.getConfig().simplemenu : null,
       menu: [...document.querySelectorAll('.menubar')].map(x => x.outerHTML),
       sections: [...document.querySelectorAll('section[data-stack-name]')].map(x => ({
-        name: x.dataset.stackName, id: x.id, parent: x.parentElement && x.parentElement.tagName
+        name: x.dataset.stackName, id: x.id,
+        parent: x.parentElement && x.parentElement.tagName,
+        parentId: x.parentElement && x.parentElement.id,
+        parentClasses: x.parentElement && x.parentElement.className
       }))
     })""")
+
+
+def assert_simplemenu_initialized(page, exceptions):
+    """Fail immediately with the rendered stack layout instead of polling for 30s."""
+    state = browser_state(page)
+    assert not exceptions, f"Simplemenu raised a browser exception: {exceptions}; state={state}"
+    items = page.locator(".menubar .menu li")
+    assert items.count() >= 3, (
+        "Simplemenu did not initialize a menu from the detected stack "
+        f"attributes: {state['sections']}; plugins={state['plugins']}; menu={state['menu']}"
+    )
 
 
 @pytest.mark.browser
@@ -91,7 +105,7 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert runtime_config.get("barhtml", {}).get("footer") == expected_footer, (
                 f"Simplemenu runtime footer is wrong: {runtime_config!r}; state={browser_state(page)}"
             )
-            page.wait_for_function("document.querySelectorAll('.menubar .menu li').length >= 3")
+            assert_simplemenu_initialized(page, exceptions)
 
         # Cover has its own top-left mark and suppresses the shared mark.
             cover_logo = page.locator("section.present.fs-cover .fs-cover-logo")
@@ -108,6 +122,10 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
 
             groups = page.locator(".menubar .menu li").all_inner_texts()
             assert {"Introduction", "Formatting", "Examples"}.issubset(set(groups)), f"Simplemenu groups are wrong: {groups}; state={browser_state(page)}"
+            links = page.locator(".menubar .menu a").evaluate_all(
+                "items => Object.fromEntries(items.map(item => [item.textContent, item.getAttribute('href')]))"
+            )
+            assert links == {"Introduction": "#/1", "Formatting": "#/2", "Examples": "#/3"}
             assert page.locator(".menubar").is_visible(), "Simplemenu did not initialize"
             introduction = page.locator(".menubar .menu li", has_text="Introduction")
             assert "active" in (introduction.get_attribute("class") or "").split(), "Introduction is not the active section"
@@ -115,6 +133,29 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert numbers.count(), "slide number is not visible on content slides"
             assert "/" in numbers.first.inner_text(), "Simplemenu did not update the slide number"
             number_before = numbers.first.inner_text()
+            introduction_link = introduction.locator("a")
+            assert introduction_link.get_attribute("href") == "#/1"
+
+            # A vertical move keeps the same menu item active while advancing
+            # both Reveal's vertical index and Simplemenu's slide number.
+            page.evaluate("Reveal.slide(2, 0)")
+            formatting = page.locator(".menubar .menu li", has_text="Formatting")
+            assert "active" in (formatting.get_attribute("class") or "").split()
+            vertical_number = numbers.first.inner_text()
+            page.keyboard.press("ArrowDown")
+            page.wait_for_timeout(150)
+            assert page.evaluate("({h: Reveal.getIndices().h, v: Reveal.getIndices().v})") == {"h": 2, "v": 1}
+            assert "active" in (formatting.get_attribute("class") or "").split()
+            assert numbers.first.inner_text() != vertical_number
+
+            # Menu links navigate back to the first vertical slide in their
+            # horizontal stack and update active state and numbering.
+            introduction_link.click()
+            page.wait_for_timeout(150)
+            assert page.evaluate("({h: Reveal.getIndices().h, v: Reveal.getIndices().v})") == {"h": 1, "v": 0}
+            assert "active" in (introduction.get_attribute("class") or "").split()
+            assert numbers.first.inner_text() == number_before
+
             before = page.evaluate("Reveal.getIndices()")
             assert_logo_at_fixed_top_right(page)
             assert page.evaluate("Reveal.getIndices()") != before, "navigation did not advance the presentation"
