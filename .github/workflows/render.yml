@@ -94,10 +94,21 @@ jobs:
         with:
           version: "1.8.0"
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.22"
+
       # This intentionally renders the checked-in example directly; publishing
       # must not depend on Copier generation or its network-installed extras.
       - name: Render canonical example presentation
         run: quarto render template.qmd
+
+      - name: Generate title-slide preview
+        run: |
+          uv sync
+          uv run playwright install chromium
+          uv run python scripts/generate-preview.py template.html preview.png
 
       - name: Assemble downloadable presentation
         run: |
@@ -106,8 +117,12 @@ jobs:
           mkdir "$distribution"
           cp template.html "$distribution/"
           cp template.html "$distribution/index.html"
+          cp preview.png "$distribution/"
           cp -a template_files figures "$distribution/"
           test -f "$distribution/index.html"
+
+          # Validate the exact preview that will be downloadable and deployed.
+          uv run python scripts/generate-preview.py --validate-only template.html "$distribution/preview.png"
 
           # Ensure every local resource referenced directly by the HTML was
           # included. Remote URLs, anchors, and inline data URLs need no file.
@@ -175,5 +190,21 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Verify images on GitHub Pages
-        run: python tests/check-published-images.py "${{ steps.deployment.outputs.page_url }}"
+      - name: Verify images and preview on GitHub Pages
+        run: |
+          python tests/check-published-images.py "${{ steps.deployment.outputs.page_url }}"
+          preview_url="${{ steps.deployment.outputs.page_url }}preview.png"
+          curl --fail --location --retry 5 --retry-all-errors --output deployed-preview.png "$preview_url"
+          python - <<'PY'
+          import struct
+          from pathlib import Path
+
+          path = Path("deployed-preview.png")
+          header = path.read_bytes()[:24]
+          if len(header) != 24 or header[:8] != b"\x89PNG\r\n\x1a\n" or header[12:16] != b"IHDR":
+              raise SystemExit("Deployed /preview.png is not a valid PNG")
+          dimensions = struct.unpack(">II", header[16:24])
+          if dimensions != (1600, 900):
+              raise SystemExit(f"Deployed /preview.png is {dimensions[0]}x{dimensions[1]}, expected 1600x900")
+          print("Deployed /preview.png is accessible and valid (1600x900)")
+          PY

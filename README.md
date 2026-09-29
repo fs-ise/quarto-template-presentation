@@ -2,7 +2,9 @@
 
 A reusable Quarto/reveal.js presentation template with Frankfurt School branding, slide numbering, and Simplemenu navigation.
 
-[**View example presentation**](https://fs-ise.github.io/quarto-template-presentation/)
+[![FS-ISE Presentation Preview](https://fs-ise.github.io/quarto-template-presentation/preview.png)](https://fs-ise.github.io/quarto-template-presentation/)
+
+Click the preview to open the interactive presentation.
 
 ## Create a presentation with Copier
 
