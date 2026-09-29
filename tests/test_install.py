@@ -38,11 +38,16 @@ def test_clean_quarto_use_template_uses_checkout(artifact_root):
     verify_install(project)
     # Running outside the source project's tree ensures Quarto resolves this
     # directory (not the checkout's parent _quarto.yml) as the destination.
-    document = project / "template.qmd"
-    assert document.is_file()
-    assert not (project / "copier.yml").exists(), "template internals leaked into generated project"
+    documents = list(project.glob("*.qmd"))
+    assert len(documents) == 1, f"expected one generated presentation, found {documents}"
+    document = documents[0]
+
+    generated_entries = {path.name for path in project.iterdir()}
+    assert generated_entries == {"_extensions", document.name}, (
+        f"unexpected repository infrastructure in generated project: {sorted(generated_entries)}"
+    )
     run(["quarto", "render", document.name], cwd=project)
-    assert_resources_exist(project / "template.html")
+    assert_resources_exist(document.with_suffix(".html"))
 
 
 @pytest.mark.integration

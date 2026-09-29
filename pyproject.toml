@@ -14,6 +14,6 @@ addopts = "-ra"
 testpaths = ["tests"]
 markers = [
   "browser: requires Chromium",
-  "integration: invokes Quarto or a remote installer",
+  "integration: invokes Copier, Quarto, or a remote installer",
+  "static: does not invoke Copier, Quarto, Playwright, or network tools",
 ]
-

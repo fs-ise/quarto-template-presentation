@@ -1,3 +1,5 @@
+import pytest
+
 from helpers import assert_resources_exist, elements
 
 
@@ -12,12 +14,14 @@ def assert_rendered_presentation(html):
     assert_resources_exist(html)
 
 
+@pytest.mark.integration
 def test_canonical_example_rendering(canonical_html):
     assert_rendered_presentation(canonical_html)
     for group in ("Introduction", "Formatting", "Examples"):
         assert len(elements(canonical_html, "section", data_name=group)) == 1, f"expected one {group} section"
 
 
+@pytest.mark.integration
 def test_generated_project_rendering(generated_html):
     assert_rendered_presentation(generated_html)
     project = generated_html.parents[1]
@@ -27,6 +31,7 @@ def test_generated_project_rendering(generated_html):
         assert not (project / asset).exists(), f"Quarto flattened {asset} into project root"
 
 
+@pytest.mark.static
 def test_negative_broken_image_reference(tmp_path):
     html = tmp_path / "index.html"
     html.write_text('<html><img src="figures/missing.png"></html>')
@@ -36,4 +41,3 @@ def test_negative_broken_image_reference(tmp_path):
         assert "missing.png" in str(error)
     else:
         raise AssertionError("resource check accepted a broken image reference")
-

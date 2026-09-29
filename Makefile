@@ -18,7 +18,7 @@ test: $(QUARTO)
 test-static:
 	uv sync
 	mkdir -p test-results
-	uv run pytest -m "not integration and not browser" --junitxml=test-results/static.xml
+	uv run pytest tests/test_manifest.py tests/test_render.py -m static --junitxml=test-results/static.xml
 
 test-install: $(QUARTO)
 	uv sync

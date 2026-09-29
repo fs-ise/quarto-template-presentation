@@ -1,9 +1,13 @@
 from pathlib import Path
 
+import pytest
+
 from helpers import assert_manifest, load_yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 EXTENSION = ROOT / "_extensions/fs-ise-presentation"
+
+pytestmark = pytest.mark.static
 
 
 def test_extension_manifest_and_embedded_dependency():

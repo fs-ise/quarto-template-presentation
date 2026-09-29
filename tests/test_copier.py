@@ -1,5 +1,10 @@
+import pytest
+
 from conftest import ROOT
 from helpers import assert_manifest, load_yaml
+
+
+pytestmark = pytest.mark.integration
 
 
 def find_fs_extension(project):

@@ -1,4 +1,11 @@
 _quarto.yml
+.github/
+.gitignore
+.quartoignore
+Makefile
+README.md
 copier.yml
 copier-template/
+pyproject.toml
 tests/
+uv.lock
