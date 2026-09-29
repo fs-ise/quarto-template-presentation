@@ -180,11 +180,33 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert page.evaluate("Reveal.getIndices()") != before, "navigation did not advance the presentation"
             assert numbers.first.inner_text() != number_before, "Simplemenu did not update the slide number during navigation"
             assert page.locator(".menubar .menu li.active").inner_text() == "Formatting", "Formatting is not the active section"
+            assert page.locator("section.present:not(.stack)").evaluate(
+                "node => parseFloat(getComputedStyle(node).paddingRight)"
+            ) == pytest.approx(210, abs=0.1), "regular slides must retain content-logo clearance"
 
             # The final slide contains a real, centered QR code for the
             # documented destination rather than a commented-out example.
             page.evaluate("Reveal.slide(Reveal.getHorizontalSlides().length - 1, 99)")
             page.wait_for_timeout(150)
+            final_slide = page.locator(".reveal .slides section.present:not(.stack)")
+            assert "fs-qr-slide" in (final_slide.get_attribute("class") or "").split(), (
+                "Quarto did not attach fs-qr-slide to the rendered section"
+            )
+            assert "fs-qr-slide" not in (final_slide.locator("h2").get_attribute("class") or "").split(), (
+                "Quarto attached fs-qr-slide to the heading instead of the rendered section"
+            )
+            assert final_slide.evaluate(
+                "node => parseFloat(getComputedStyle(node).paddingRight)"
+            ) == pytest.approx(0, abs=0.1), "final QR slide must have zero right padding"
+            assert final_slide.locator(":scope > h2").evaluate(
+                "node => parseFloat(getComputedStyle(node).paddingRight)"
+            ) == pytest.approx(210, abs=0.1), "final-slide heading must retain content-logo clearance"
+            qr_content = final_slide.locator(":scope > .fs-qr-content")
+            assert qr_content.evaluate(
+                "node => node.getBoundingClientRect().width"
+            ) == pytest.approx(final_slide.evaluate(
+                "node => node.getBoundingClientRect().width"
+            ), abs=0.1), "QR-code container does not occupy the full slide width"
             qr = page.locator('section.present svg[data-qrcode-value="https://example.com"]')
             assert qr.is_visible(), "final QR code is not visible"
             qr_box = qr.bounding_box()
