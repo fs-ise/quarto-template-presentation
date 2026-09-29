@@ -39,5 +39,5 @@ def test_copier_project_and_answers(copier_project):
     assert not (copier_project / "copier.yml").exists()
     assert not (copier_project / "copier-template").exists()
     presentation = (copier_project / "presentation.qmd").read_text(encoding="utf-8")
-    assert "{{< qrcode https://fs-ise.github.io/quarto-template-presentation/ >}}" in presentation
+    assert "{{< qrcode https://example.com >}}" in presentation
     assert "data-stack-name" in presentation

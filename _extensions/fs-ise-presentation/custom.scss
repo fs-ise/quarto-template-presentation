@@ -13,6 +13,10 @@ $presentation-font-size-root: 36px;
   --fs-cover-logo-width: 224px;
   --fs-content-logo-width: 166px;
   --fs-edge-inset: 12px;
+  /* The SVG contains a little intrinsic whitespace. These offsets put its
+     visible artwork 12--16px from the content-slide edges. */
+  --fs-content-logo-top: 6px;
+  --fs-content-logo-right: 2px;
   --fs-logo-clearance: 210px;
   --brand-color: #002EFF;   /* Frankfurt blue from the logo */
   --font-family: "Source Sans Pro", sans-serif;
@@ -69,7 +73,7 @@ $presentation-font-size-root: 36px;
   color: #000000;
   font-family: var(--font-family);
   width: 100%;
-  font-size: 120px;
+  font-size: 80px;
   font-weight: 700;
   line-height: 1.12;
   overflow-wrap: anywhere;
@@ -81,7 +85,7 @@ $presentation-font-size-root: 36px;
   margin: 0 0 1.4em;
   color: #000000;
   width: 100%;
-  font-size: 72px;
+  font-size: 48px;
   line-height: 1.3;
   overflow-wrap: anywhere;
   text-align: left;
@@ -91,7 +95,7 @@ $presentation-font-size-root: 36px;
   width: 100%;
   margin: 0.2em 0 0;
   color: #000000;
-  font-size: 58px;
+  font-size: 38px;
   line-height: 1.25;
   overflow-wrap: anywhere;
   text-align: left;
@@ -101,7 +105,7 @@ $presentation-font-size-root: 36px;
   width: 100%;
   margin: 0.2em 0 0;
   color: #000000;
-  font-size: 50px;
+  font-size: 32px;
   line-height: 1.25;
   overflow-wrap: anywhere;
   text-align: left;
@@ -114,7 +118,8 @@ html.fs-cover-visible #fs-header,
 html.fs-cover-visible .slide-number,
 html.fs-cover-visible #custom-slide-number,
 html.fs-cover-visible .reveal .progress,
-html.fs-cover-visible .menubar {
+html.fs-cover-visible .menubar,
+html.fs-cover-visible .slide-menu-button {
   display: none !important;
 }
 
@@ -129,8 +134,8 @@ html.fs-cover-visible .menubar {
 /* Top-right decorative logo */
 .reveal .slides > #fs-header {
   position: absolute;
-  top: var(--fs-edge-inset);
-  right: var(--fs-edge-inset);
+  top: var(--fs-content-logo-top);
+  right: var(--fs-content-logo-right);
   left: auto;
   width: var(--fs-content-logo-width);
   margin: 0;
@@ -223,5 +228,11 @@ body,
 }
 
 .reveal .slide-menu-button {
-  margin-bottom: 10px;
+  /* Quarto's existing Reveal menu control remains the left-hand footer
+     action; lift it above Simplemenu rather than replacing its behaviour. */
+  bottom: 18px;
+  left: 24px;
+  right: auto;
+  margin: 0;
+  z-index: 60;
 }

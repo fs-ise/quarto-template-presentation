@@ -79,22 +79,6 @@ compound_growth(1_000, 0.05, 3)
 Code is syntax-highlighted without executing it, so this example has no
 runtime or data dependencies.
 
-## Your next step
-
-Edit the metadata, replace the examples, and keep each slide focused.
-
-::: {.smaller}
-Render with `quarto render template.qmd` or develop interactively with
-`quarto preview template.qmd`.
-:::
-
-<!--
-Copier projects also install QR-code and Iconify extensions. Examples:
-
-{{< qrcode https://example.com >}}
-{{< iconify fa6-solid chart-line >}}
--->
-
 ## Charts
 
 ::: {.fs-centered-diagram}
@@ -106,4 +90,14 @@ flowchart LR
     C -->|Two| E[iPhone]
     C -->|Three| F[fa:fa-car Car]
 ```
+:::
+
+## Thank you!
+
+Questions?
+
+::: {style="text-align: center;"}
+{{< qrcode https://example.com >}}
+
+[https://example.com](https://example.com)
 :::

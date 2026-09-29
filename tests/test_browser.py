@@ -117,6 +117,11 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert 0 <= cover_box["y"] - canvas_box["y"] <= 30, "cover logo is not at the upper-left edge"
             assert not page.locator("#fs-header").is_visible()
             assert not page.locator(".menubar").is_visible()
+            cover_details = page.locator("section.present.fs-cover .fs-cover-details")
+            assert cover_details.evaluate("node => node.scrollHeight <= node.clientHeight"), "cover copy overflows vertically"
+            for selector, size in (("h1.title", 80), (".subtitle", 48), (".author", 38), (".date", 32)):
+                element = page.locator(f"section.present.fs-cover {selector}")
+                assert element.evaluate("node => parseFloat(getComputedStyle(node).fontSize)") == pytest.approx(size, abs=0.1)
             page.keyboard.press("ArrowRight")
             page.wait_for_timeout(150)
 
@@ -127,6 +132,20 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             )
             assert links == {"Introduction": "#/1", "Formatting": "#/2", "Examples": "#/3"}
             assert page.locator(".menubar").is_visible(), "Simplemenu did not initialize"
+            footer = page.locator(".menubar").bounding_box()
+            menu = page.locator(".menubar .menu").bounding_box()
+            assert footer and menu
+            progress = page.locator(".reveal .progress").bounding_box()
+            assert progress and footer["y"] + footer["height"] <= progress["y"] + 1, "footer overlaps the progress bar"
+            assert menu["x"] + menu["width"] / 2 == pytest.approx(
+                footer["x"] + footer["width"] / 2, abs=1.5
+            ), "Simplemenu groups are not horizontally centered"
+            menu_button = page.locator(".slide-menu-button")
+            assert menu_button.is_visible(), "Reveal menu button is hidden behind the footer"
+            assert menu_button.evaluate("node => getComputedStyle(node).pointerEvents !== 'none'")
+            menu_button.click()
+            assert page.locator(".slide-menu").is_visible(), "Reveal menu did not open"
+            page.keyboard.press("Escape")
             introduction = page.locator(".menubar .menu li", has_text="Introduction")
             assert "active" in (introduction.get_attribute("class") or "").split(), "Introduction is not the active section"
             numbers = page.locator(".menu-slide-number:visible")
@@ -161,6 +180,20 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert page.evaluate("Reveal.getIndices()") != before, "navigation did not advance the presentation"
             assert numbers.first.inner_text() != number_before, "Simplemenu did not update the slide number during navigation"
             assert page.locator(".menubar .menu li.active").inner_text() == "Formatting", "Formatting is not the active section"
+
+            # The final slide contains a real, centered QR code for the
+            # documented destination rather than a commented-out example.
+            page.evaluate("Reveal.slide(Reveal.getHorizontalSlides().length - 1, 99)")
+            page.wait_for_timeout(150)
+            qr = page.locator('section.present svg[data-qrcode-value="https://example.com"]')
+            assert qr.is_visible(), "final QR code is not visible"
+            qr_box = qr.bounding_box()
+            slide_box = page.locator("section.present").bounding_box()
+            assert qr_box and slide_box
+            assert qr_box["x"] + qr_box["width"] / 2 == pytest.approx(
+                slide_box["x"] + slide_box["width"] / 2, abs=2
+            ), "QR code is not centered"
+            assert qr_box["width"] >= 100 * canvas_box["width"] / 1600, "QR code is too small to scan"
             assert not exceptions, f"uncaught browser exceptions: {exceptions}; state={browser_state(page)}"
             assert not failed, f"browser failed to load resources: {failed}"
         except Exception:

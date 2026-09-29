@@ -37,8 +37,9 @@ Organize the deck with level-one section stacks and level-two slides. Add
 ```
 
 Copier projects also install the QR-code extension automatically. Their final
-slide includes a working `{{< qrcode https://fs-ise.github.io/quarto-template-presentation/ >}}`
-example; replace that URL with the destination for your presentation.
+slide includes a working `{{< qrcode https://example.com >}}` example; replace
+that URL with the destination for your presentation. The canonical example
+vendors the QR-code extension as well, so it renders with the same shortcode.
 
 ## Render
 
