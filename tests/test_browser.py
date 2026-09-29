@@ -26,7 +26,7 @@ def server(directory):
 
 def logo_position(page):
     result = page.locator("#fs-header").evaluate("""async logo => {
-      const slide = document.querySelector('.reveal .slides section.present:not(.stack)').getBoundingClientRect();
+      const canvas = document.querySelector('.reveal .slides').getBoundingClientRect();
       const box = logo.getBoundingClientRect();
       const source = await (await fetch(logo.querySelector('img').src)).text();
       const parsed = new DOMParser().parseFromString(source, 'image/svg+xml').documentElement;
@@ -35,11 +35,14 @@ def logo_position(page):
       const artwork = parsed.getBBox();
       const viewBox = parsed.viewBox.baseVal;
       parsed.remove();
-      const imageScale = box.width / viewBox.width;
-      const slideScale = slide.width / Reveal.getConfig().width;
+      const imageScaleX = box.width / viewBox.width;
+      const imageScaleY = box.height / viewBox.height;
+      const config = Reveal.getConfig();
+      const slideScaleX = canvas.width / config.width;
+      const slideScaleY = canvas.height / config.height;
       return {
-        right: (slide.right - box.right + (viewBox.x + viewBox.width - artwork.x - artwork.width) * imageScale) / slideScale,
-        top: (box.top - slide.top + (artwork.y - viewBox.y) * imageScale) / slideScale,
+        right: (canvas.right - box.right + (viewBox.x + viewBox.width - artwork.x - artwork.width) * imageScaleX) / slideScaleX,
+        top: (box.top - canvas.top + (artwork.y - viewBox.y) * imageScaleY) / slideScaleY,
               visible: getComputedStyle(logo).display !== 'none'};
     }""")
     assert result["visible"], "shared content logo is not visible"
