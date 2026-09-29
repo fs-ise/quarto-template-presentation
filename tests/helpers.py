@@ -72,7 +72,7 @@ def assert_manifest(path: Path, plugin_path: Path | None = None) -> None:
     assert plugin is not None, "embedded Simplemenu plugin declaration is missing"
     simplemenu = plugin.get("config", {}).get("simplemenu")
     assert isinstance(simplemenu, dict), "Simplemenu plugin configuration is missing"
-    assert simplemenu.get("scale") == 0.5
+    assert simplemenu.get("scale") == 0.7
     footer = simplemenu.get("barhtml", {}).get("footer", "")
     parser = Document()
     parser.feed(footer)

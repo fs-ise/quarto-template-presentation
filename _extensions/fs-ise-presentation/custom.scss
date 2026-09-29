@@ -11,13 +11,12 @@ $presentation-font-size-root: 36px;
   /* These are logical slide pixels. Reveal scales them with its 1600 x 900
      canvas, so the mark stays proportional in windows and embedded decks. */
   --fs-cover-logo-width: 224px;
-  --fs-content-logo-width: 166px;
+  /* The content-only asset is cropped to its artwork. 152.6px preserves the
+     artwork size produced by the original 166px-wide, whitespace-padded SVG. */
+  --fs-content-logo-width: 152.6px;
   --fs-edge-inset: 12px;
-  /* The SVG artwork starts 6.97 units below its 75-unit viewBox and ends
-     10.40 units before its right edge. At the displayed width below these
-     offsets put the visible mark about 10px from the slide edges. */
-  --fs-content-logo-top: 3px;
-  --fs-content-logo-right: 2px;
+  --fs-content-logo-top: 5px;
+  --fs-content-logo-right: 5px;
   --fs-logo-clearance: 210px;
   --brand-color: #002EFF;   /* Frankfurt blue from the logo */
   --font-family: "Source Sans Pro", sans-serif;
@@ -147,6 +146,26 @@ html.fs-cover-visible .slide-menu-button {
 .reveal .slides section.fs-qr-slide > .fs-qr-content {
   width: 100%;
   text-align: center;
+}
+
+.reveal .slides section.fs-qr-slide > .fs-discussion-prompts {
+  width: min(880px, 70%);
+  margin: 0 auto 0.35em;
+  font-size: 0.72em;
+  text-align: left;
+}
+
+.reveal .slides section.fs-qr-slide > .fs-discussion-prompts p {
+  margin: 0 0 0.2em;
+}
+
+.reveal .slides section.fs-qr-slide > .fs-discussion-prompts ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.reveal .slides section.fs-qr-slide > .fs-qr-content p {
+  margin: 0.2em 0;
 }
 
 /* Top-right decorative logo */

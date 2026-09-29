@@ -84,17 +84,23 @@ runtime or data dependencies.
 ::: {.fs-centered-diagram}
 ```{mermaid}
 flowchart LR
-    A[Christmas] -->|Get money| B(Go shopping)
-    B --> C{Let me think}
-    C -->|One| D[Laptop]
-    C -->|Two| E[iPhone]
-    C -->|Three| F[fa:fa-car Car]
+    A[Research question] --> B[Literature search]
+    B --> C[Deduplication]
+    C --> D[Screening]
+    D --> E[Eligibility assessment]
+    E --> F[Evidence synthesis]
 ```
 :::
 
 ## Thank you! {.fs-qr-slide}
 
-Questions?
+::: {.fs-discussion-prompts}
+**Discussion prompts**
+
+- Which assumptions would you challenge?
+- What additional evidence would change your interpretation?
+- What should we investigate next?
+:::
 
 ::: {.fs-qr-content}
 {{< qrcode https://example.com >}}

@@ -26,7 +26,7 @@ def server(directory):
 
 def logo_position(page):
     result = page.locator("#fs-header").evaluate("""async logo => {
-      const canvas = document.querySelector('.reveal .slides').getBoundingClientRect();
+      const slide = document.querySelector('.reveal .slides section.present:not(.stack)').getBoundingClientRect();
       const box = logo.getBoundingClientRect();
       const source = await (await fetch(logo.querySelector('img').src)).text();
       const parsed = new DOMParser().parseFromString(source, 'image/svg+xml').documentElement;
@@ -36,10 +36,10 @@ def logo_position(page):
       const viewBox = parsed.viewBox.baseVal;
       parsed.remove();
       const imageScale = box.width / viewBox.width;
-      const slideScale = canvas.width / 1600;
+      const slideScale = slide.width / Reveal.getConfig().width;
       return {
-        right: (canvas.right - box.right + (viewBox.width - artwork.x - artwork.width) * imageScale) / slideScale,
-        top: (box.top - canvas.top + (artwork.y - viewBox.y) * imageScale) / slideScale,
+        right: (slide.right - box.right + (viewBox.x + viewBox.width - artwork.x - artwork.width) * imageScale) / slideScale,
+        top: (box.top - slide.top + (artwork.y - viewBox.y) * imageScale) / slideScale,
               visible: getComputedStyle(logo).display !== 'none'};
     }""")
     assert result["visible"], "shared content logo is not visible"
@@ -53,7 +53,7 @@ def assert_logo_at_fixed_top_right(page):
     centered = logo_position(page)
     for key in ("right", "top"):
         assert abs(first[key] - centered[key]) < 1.5, f"logo {key} moved on vertically centred section slide: {first} -> {centered}"
-        assert 8 <= first[key] <= 12, f"visible logo artwork is not 8--12px from the slide edge: {first}"
+        assert 4 <= first[key] <= 6, f"visible logo artwork is not 4--6px from the slide edge: {first}"
     heading = page.locator("section.present h1, section.present h2").first.bounding_box()
     logo = page.locator("#fs-header").bounding_box()
     if heading and logo:
@@ -104,9 +104,27 @@ def navigation_links_box(page):
     }""")
 
 
+def assert_simplemenu_layout(page):
+    menu = page.locator(".menubar")
+    reveal_font = page.locator(".reveal").evaluate("node => parseFloat(getComputedStyle(node).fontSize)")
+    menu_font = menu.evaluate("node => parseFloat(getComputedStyle(node).fontSize)")
+    assert menu_font == pytest.approx(reveal_font * 0.7, abs=0.15), "Simplemenu's effective scale is not 0.7"
+    boxes = page.locator(".slide-menu-button, .menubar .menu a, .menubar .menu-slide-number").evaluate_all(
+        """nodes => nodes.filter(node => node.getClientRects().length).map(node => {
+          const {left, right, top, bottom} = node.getBoundingClientRect();
+          return {name: node.textContent.trim() || 'hamburger', box: {left, right, top, bottom}};
+        })"""
+    )
+    for index, item in enumerate(boxes):
+        for other in boxes[index + 1:]:
+            a, b = item["box"], other["box"]
+            overlaps = not (a["right"] <= b["left"] or b["right"] <= a["left"] or a["bottom"] <= b["top"] or b["bottom"] <= a["top"])
+            assert not overlaps, f"Simplemenu elements overlap: {item['name']} and {other['name']}"
+
+
 @pytest.mark.browser
 @pytest.mark.integration
-@pytest.mark.parametrize("viewport", [{"width": 1920, "height": 1080}, {"width": 800, "height": 600}], ids=["fullscreen", "embedded"])
+@pytest.mark.parametrize("viewport", [{"width": 1600, "height": 900}, {"width": 800, "height": 600}], ids=["1600x900", "embedded"])
 def test_presentation_observable_behaviour(canonical_html, viewport):
     with server(canonical_html.parent) as origin, sync_playwright() as playwright:
         browser = playwright.chromium.launch()
@@ -122,6 +140,7 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             page.wait_for_function("window.Reveal && Reveal.isReady()")
             runtime_config = page.evaluate("Reveal.getConfig().simplemenu")
             assert isinstance(runtime_config, dict), f"Simplemenu runtime configuration is missing: {browser_state(page)}"
+            assert runtime_config.get("scale") == pytest.approx(0.7), f"Simplemenu runtime scale is wrong: {runtime_config!r}"
             expected_footer = "<nav class='menubar' aria-label='Presentation sections'><ul class='menu'></ul><span class='menu-slide-number' aria-label='Slide number'></span></nav>"
             assert runtime_config.get("barhtml", {}).get("footer") == expected_footer, (
                 f"Simplemenu runtime footer is wrong: {runtime_config!r}; state={browser_state(page)}"
@@ -161,6 +180,7 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert (links_box["left"] + links_box["right"]) / 2 == pytest.approx(
                 footer["x"] + footer["width"] / 2, abs=1.5
             ), "Simplemenu groups are not horizontally centered"
+            assert_simplemenu_layout(page)
             menu_button = page.locator(".slide-menu-button")
             assert menu_button.is_visible(), "Reveal menu button is hidden behind the footer"
             assert menu_button.evaluate("node => getComputedStyle(node).pointerEvents !== 'none'")
@@ -266,7 +286,7 @@ def test_negative_incorrect_logo_position_is_detected(canonical_html):
 
 @pytest.mark.browser
 @pytest.mark.integration
-@pytest.mark.parametrize("viewport", [{"width": 1920, "height": 1080}, {"width": 800, "height": 600}], ids=["fullscreen", "embedded"])
+@pytest.mark.parametrize("viewport", [{"width": 1600, "height": 900}, {"width": 800, "height": 600}], ids=["1600x900", "embedded"])
 def test_generated_project_layout_and_controls(generated_html, viewport):
     """Exercise installed template assets, rather than only the source deck."""
     with server(generated_html.parent) as origin, sync_playwright() as playwright:
@@ -294,6 +314,7 @@ def test_generated_project_layout_and_controls(generated_html, viewport):
         assert (links_box["left"] + links_box["right"]) / 2 == pytest.approx(
             footer["x"] + footer["width"] / 2, abs=1.5
         ), "generated Simplemenu links are not centered against the full slide"
+        assert_simplemenu_layout(page)
         assert_logo_at_fixed_top_right(page)
 
         menu_button = page.locator(".slide-menu-button")

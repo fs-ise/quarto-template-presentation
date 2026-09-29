@@ -7,7 +7,8 @@ def assert_rendered_presentation(html):
     assert html.is_file(), f"render did not create {html}"
     assert elements(html, "section", data_state="fs-cover-active"), "rendered cover state is missing"
     assert elements(html, "section", data_background_image="figures/title_background.png"), "cover background is missing"
-    assert elements(html, "img", src="figures/fs_logo_blue.svg"), "rendered logos are missing"
+    assert elements(html, "img", src="figures/fs_logo_blue.svg"), "rendered cover logo is missing"
+    assert elements(html, "img", src="figures/fs_logo_blue_content.svg"), "rendered content logo is missing"
     assert elements(html, "script", src="presentation_files/libs/revealjs/plugin/simplemenu/simplemenu.js") or any(
         "simplemenu" in (item.get("src") or "") for item in elements(html, "script")
     ), "rendered presentation does not load Simplemenu"
@@ -30,7 +31,7 @@ def test_generated_project_rendering(generated_html):
     rendered = generated_html.read_text(encoding="utf-8")
     assert "https://example.com" in rendered
     project = generated_html.parents[1]
-    for asset in ("fs_logo_blue.svg", "title_background.png"):
+    for asset in ("fs_logo_blue.svg", "fs_logo_blue_content.svg", "title_background.png"):
         assert (project / "figures" / asset).is_file()
         assert (project / "_site/figures" / asset).is_file()
         assert not (project / asset).exists(), f"Quarto flattened {asset} into project root"
