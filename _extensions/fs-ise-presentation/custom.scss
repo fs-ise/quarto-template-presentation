@@ -8,8 +8,9 @@ $presentation-font-size-root: 36px;
 
 /* --- header sizing + spacing --- */
 :root { 
-  /* These are logical slide pixels. Reveal scales them with its 1600 x 900
-     canvas, so the mark stays proportional in windows and embedded decks. */
+  /* Cover dimensions are logical slide pixels. The content width is also
+     logical; header.html converts it with Reveal.getScale() for the root-level
+     overlay so the mark stays proportional in windows and embedded decks. */
   --fs-cover-logo-width: 224px;
   /* The content-only asset is cropped to its artwork. 152.6px preserves the
      artwork size produced by the original 166px-wide, whitespace-padded SVG. */
@@ -123,9 +124,8 @@ html.fs-cover-visible .slide-menu-button {
   display: none !important;
 }
 
-/* The shared header is mounted once as a direct child of Reveal's complete
-   1600 x 900 slide canvas. The reserved column prevents every kind of flow
-   content (not just headings) from entering the logo area. */
+/* The reserved column prevents every kind of flow content (not just headings)
+   from entering the logo area. */
 .reveal .slides section:not(.stack):not(.fs-cover) {
   box-sizing: border-box;
   padding-right: var(--fs-logo-clearance) !important;
@@ -169,7 +169,7 @@ html.fs-cover-visible .slide-menu-button {
 }
 
 /* Top-right decorative logo */
-.reveal .slides > #fs-header {
+.reveal > #fs-header {
   position: absolute;
   top: var(--fs-content-logo-top);
   right: var(--fs-content-logo-right);
@@ -194,7 +194,7 @@ body,
 }
 
 /* Match the visible cover-logo size without distorting either asset. */
-.reveal .slides > #fs-header img {
+.reveal > #fs-header img {
   display: block;
   width: 100%;
   height: auto;

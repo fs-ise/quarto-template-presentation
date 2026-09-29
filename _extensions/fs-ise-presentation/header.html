@@ -5,7 +5,15 @@
   (() => {
     const coverClass = "fs-cover-visible";
     const logo = document.getElementById("fs-header");
+    const logicalLogoWidth = 152.6;
     let logoMounted = false;
+
+    const sizeLogo = () => {
+      const scale = window.Reveal?.getScale?.();
+      if (Number.isFinite(scale) && scale > 0) {
+        logo.style.width = `${logicalLogoWidth * scale}px`;
+      }
+    };
 
     const syncCoverState = (event) => {
       const currentSlide = event?.currentSlide || window.Reveal?.getCurrentSlide();
@@ -17,12 +25,13 @@
 
     const initializeLogo = (event) => {
       if (!logoMounted) {
-        const slideCanvas = document.querySelector(".reveal .slides");
-        if (slideCanvas) {
-          slideCanvas.appendChild(logo);
+        const revealRoot = document.querySelector(".reveal");
+        if (revealRoot) {
+          revealRoot.appendChild(logo);
           logoMounted = true;
         }
       }
+      sizeLogo();
       syncCoverState(event);
     };
 
@@ -34,6 +43,8 @@
 
       Reveal.on("ready", initializeLogo);
       Reveal.on("slidechanged", syncCoverState);
+      Reveal.on("resize", sizeLogo);
+      window.addEventListener("resize", () => requestAnimationFrame(sizeLogo));
       if (Reveal.isReady?.()) {
         initializeLogo();
       } else {
