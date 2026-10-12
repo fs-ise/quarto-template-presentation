@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from conftest import ROOT, run
@@ -69,3 +71,37 @@ def test_copier_initializes_and_commits_git_repository(copier_project):
 
     status = run(["git", "status", "--porcelain"], cwd=copier_project)
     assert not status.stdout.strip(), "generated project should be clean after its initial commit"
+
+
+def test_copier_skips_git_setup_inside_existing_repository(artifact_root):
+    parent = artifact_root / "parent-repository"
+    parent.mkdir()
+    (parent / "README.md").write_text("Existing repository\n", encoding="utf-8")
+    env = os.environ.copy()
+    env.update({
+        "GIT_AUTHOR_NAME": "Copier Test",
+        "GIT_AUTHOR_EMAIL": "copier-test@example.invalid",
+        "GIT_COMMITTER_NAME": "Copier Test",
+        "GIT_COMMITTER_EMAIL": "copier-test@example.invalid",
+    })
+    run(["git", "init"], cwd=parent, env=env)
+    run(["git", "add", "README.md"], cwd=parent, env=env)
+    run(["git", "commit", "-m", "Parent commit"], cwd=parent, env=env)
+    original_commit = run(["git", "rev-parse", "HEAD"], cwd=parent).stdout.strip()
+
+    project = parent / "generated-project"
+    run([
+        "copier", "copy", "--trust", "--defaults",
+        "--data", "project_name=CI presentation",
+        "--data", "presentation_title=Generated inside an existing repository",
+        "--data", "author=CI", "--data", "subtitle=",
+        "--data", f"extension_source={ROOT}", str(ROOT), str(project),
+    ], cwd=artifact_root, env=env)
+
+    assert not (project / ".git").exists(), "Copier created a nested Git repository"
+    root = run(["git", "rev-parse", "--show-toplevel"], cwd=project)
+    assert root.stdout.strip() == str(parent)
+    commit = run(["git", "rev-parse", "HEAD"], cwd=parent)
+    assert commit.stdout.strip() == original_commit, "Copier committed changes to the enclosing repository"
+    status = run(["git", "status", "--porcelain"], cwd=parent)
+    assert status.stdout.strip() == "?? generated-project/"

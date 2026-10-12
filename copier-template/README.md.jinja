@@ -41,4 +41,6 @@ slides remain yours. Copier records the template version and your answers in
 updates can reproduce the project. If Git has no configured `user.name` and
 `user.email`, Copier still initializes the repository and stages the files;
 configure your identity and create the initial commit with
-`git commit -m "Initial commit"`.
+`git commit -m "Initial commit"`. If the project is generated inside an
+existing Git worktree, Copier skips Git setup; the generated files remain
+unstaged and uncommitted in that repository.
