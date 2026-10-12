@@ -12,6 +12,15 @@ $presentation-font-size-root: 36px;
      logical; header.html converts it with Reveal.getScale() for the root-level
      overlay so the mark stays proportional in windows and embedded decks. */
   --fs-cover-logo-width: 224px;
+  --fs-cover-content-right: 8%;
+  --fs-cover-content-gutter: 5%;
+  --fs-cover-content-y-padding: 8%;
+  --fs-cover-content-gap: 24px;
+  --fs-cover-title-min-size: 42px;
+  --fs-cover-title-max-size: 72px;
+  --fs-cover-subtitle-size: 42px;
+  --fs-cover-author-size: 32px;
+  --fs-cover-date-size: 28px;
   /* The content-only asset is cropped to its artwork. 152.6px preserves the
      artwork size produced by the original 166px-wide, whitespace-padded SVG. */
   --fs-content-logo-width: 152.6px;
@@ -30,12 +39,14 @@ $presentation-font-size-root: 36px;
   width: 100%;
   height: 100%;
   padding: 0 !important;
-  display: flex !important;
+  display: grid !important;
+  grid-template-columns: 25% minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   align-items: center;
-  justify-content: flex-end;
   text-align: initial;
   color: #000000;
   box-sizing: border-box;
+  container-type: inline-size;
 }
 
 /* Both cover and content logos share their visible size and edge inset. */
@@ -58,23 +69,29 @@ $presentation-font-size-root: 36px;
 }
 
 .reveal .slides section.fs-cover .fs-cover-details {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  width: 54%;
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  justify-items: start;
+  gap: var(--fs-cover-content-gap);
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
   max-height: 100%;
-  padding: 7% 4% 7% 2%;
+  overflow: visible;
+  padding: var(--fs-cover-content-y-padding) var(--fs-cover-content-right) var(--fs-cover-content-y-padding) var(--fs-cover-content-gutter);
   box-sizing: border-box;
   text-align: left;
 }
 
 .reveal .slides section.fs-cover h1.title {
-  margin: 0 0 0.45em;
+  margin: 0;
   color: #000000;
   font-family: var(--font-family);
   width: 100%;
-  font-size: 72px;
+  font-size: clamp(var(--fs-cover-title-min-size), 4.5cqw, var(--fs-cover-title-max-size));
   font-weight: 700;
   line-height: 1.12;
   overflow-wrap: anywhere;
@@ -83,10 +100,10 @@ $presentation-font-size-root: 36px;
 }
 
 .reveal .slides section.fs-cover .subtitle {
-  margin: 0 0 1.4em;
+  margin: 0;
   color: #000000;
   width: 100%;
-  font-size: 48px;
+  font-size: var(--fs-cover-subtitle-size);
   line-height: 1.3;
   overflow-wrap: anywhere;
   text-align: left;
@@ -94,9 +111,9 @@ $presentation-font-size-root: 36px;
 
 .reveal .slides section.fs-cover .author {
   width: 100%;
-  margin: 0.2em 0 0;
+  margin: 0;
   color: #000000;
-  font-size: 38px;
+  font-size: var(--fs-cover-author-size);
   line-height: 1.25;
   overflow-wrap: anywhere;
   text-align: left;
@@ -104,12 +121,30 @@ $presentation-font-size-root: 36px;
 
 .reveal .slides section.fs-cover .date {
   width: 100%;
-  margin: 0.2em 0 0;
+  margin: 0;
   color: #000000;
-  font-size: 32px;
+  font-size: var(--fs-cover-date-size);
   line-height: 1.25;
   overflow-wrap: anywhere;
   text-align: left;
+}
+
+.reveal .slides section.fs-cover .authors {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding-top: 16px;
+  position: relative;
+}
+
+.reveal .slides section.fs-cover .authors::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(96px, 18%);
+  border-top: 2px solid var(--brand-color);
 }
 
 /* Reveal's data-state class is placed on the viewport in some versions and on

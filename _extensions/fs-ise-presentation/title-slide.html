@@ -15,7 +15,7 @@
   <div class="fs-cover-details">
     $if(title)$<h1 class="title">$title$</h1>$endif$
     $if(subtitle)$<p class="subtitle">$subtitle$</p>$endif$
-    $for(author)$<p class="author">$author$</p>$endfor$
+    $if(author)$<div class="authors">$for(author)$<p class="author">$author$</p>$endfor$</div>$endif$
     $if(date)$<p class="date">$date$</p>$endif$
   </div>
 </section>

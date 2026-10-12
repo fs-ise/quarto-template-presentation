@@ -207,9 +207,9 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert not page.locator(".menubar").is_visible()
             cover_details = page.locator("section.present.fs-cover .fs-cover-details")
             assert cover_details.evaluate("node => node.scrollHeight <= node.clientHeight"), "cover copy overflows vertically"
-            for selector, size in (("h1.title", 72), (".subtitle", 48), (".author", 38), (".date", 32)):
-                element = page.locator(f"section.present.fs-cover {selector}")
-                assert element.evaluate("node => parseFloat(getComputedStyle(node).fontSize)") == pytest.approx(size, abs=0.1)
+            title = page.locator("section.present.fs-cover h1.title")
+            assert 42 <= title.evaluate("node => parseFloat(getComputedStyle(node).fontSize)") <= 72
+            assert title.bounding_box()["width"] > 0
             page.keyboard.press("ArrowRight")
             page.wait_for_timeout(150)
 
@@ -347,10 +347,15 @@ def test_generated_project_layout_and_controls(generated_html, viewport):
         page.wait_for_function("window.Reveal && Reveal.isReady()")
         assert_simplemenu_initialized(page, exceptions)
 
-        title_size = page.locator("section.present.fs-cover h1.title").evaluate(
+        title = page.locator("section.present.fs-cover h1.title")
+        title_size = title.evaluate(
             "node => parseFloat(getComputedStyle(node).fontSize)"
         )
-        assert title_size == pytest.approx(72, abs=0.1)
+        assert 42 <= title_size <= 72
+        slide_box = page.locator("section.present.fs-cover").bounding_box()
+        title_box = title.bounding_box()
+        assert slide_box and title_box
+        assert title_box["x"] >= slide_box["x"] and title_box["x"] + title_box["width"] <= slide_box["x"] + slide_box["width"]
         assert page.locator("section.present.fs-cover .fs-cover-details").evaluate(
             "node => node.scrollHeight <= node.clientHeight"
         ), "generated cover copy overflows vertically"
@@ -377,4 +382,111 @@ def test_generated_project_layout_and_controls(generated_html, viewport):
         assert "active" in (conclusion.get_attribute("class") or "").split()
         assert "/" in page.locator(".menu-slide-number:visible").inner_text()
         assert not exceptions, f"generated presentation raised browser exceptions: {exceptions}"
+        browser.close()
+
+
+@pytest.mark.browser
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "viewport",
+    [
+        {"width": 1600, "height": 900},
+        {"width": 1280, "height": 720},
+        {"width": 800, "height": 450},
+    ],
+    ids=["1600x900", "1280x720", "800x450"],
+)
+def test_adaptive_cover_content(canonical_html, viewport):
+    variants = [
+        ("A short title", "A concise subtitle", ["Ada Lovelace"], "12 October 2026"),
+        (
+            "Understanding heterogeneous treatment effects in longitudinal observational studies: evidence from a multi-country comparative analysis",
+            "", ["Ada Lovelace"], "12 October 2026",
+        ),
+        (
+            "A comprehensive assessment of institutional resilience and its implications for sustainable economic development",
+            "Evidence from emerging markets, with a particular focus on measurement, identification, and policy implementation",
+            ["Ada Lovelace"], "12 October 2026",
+        ),
+        (
+            "Evaluating long-term institutional resilience through comparative analysis " * 4,
+            "A study of evidence, methods, and implications", ["Ada Lovelace"], "12 October 2026",
+        ),
+        (
+            "Collaborative research findings", "A subtitle", ["Ada Lovelace", "Grace Hopper", "Katherine Johnson", "Mary Jackson"],
+            "12 October 2026",
+        ),
+        ("Title without optional metadata", None, ["Ada Lovelace"], None),
+    ]
+    with server(canonical_html.parent) as origin, sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        page = browser.new_page(viewport=viewport)
+        page.goto(f"{origin}/{canonical_html.name}", wait_until="networkidle")
+        page.wait_for_function("window.Reveal && Reveal.isReady()")
+        page.evaluate("Reveal.slide(0)")
+        slide = page.locator("section.present.fs-cover")
+        canvas = page.locator(".reveal .slides")
+        composition = None
+        for title_text, subtitle_text, authors, date_text in variants:
+            page.evaluate("""({title, subtitle, authors, date}) => {
+              const cover = document.querySelector('.fs-cover');
+              const set = (selector, text, tag = 'p') => {
+                let node = cover.querySelector(selector);
+                if (text == null || text === '') { node?.remove(); return; }
+                if (!node) { node = document.createElement(tag); node.className = selector.replace('.', ''); cover.querySelector('.fs-cover-details').append(node); }
+                node.textContent = text;
+              };
+              set('h1.title', title, 'h1');
+              set('.subtitle', subtitle);
+              let group = cover.querySelector('.authors');
+              if (!authors.length) group?.remove();
+              else {
+                if (!group) { group = document.createElement('div'); group.className = 'authors'; cover.querySelector('.fs-cover-details').append(group); }
+                group.replaceChildren(...authors.map(name => { const author = document.createElement('p'); author.className = 'author'; author.textContent = name; return author; }));
+              }
+              set('.date', date);
+            }""", {"title": title_text, "subtitle": subtitle_text, "authors": authors, "date": date_text})
+            page.evaluate("window.dispatchEvent(new Event('resize'))")
+            page.wait_for_timeout(80)
+            slide_box = slide.bounding_box()
+            canvas_box = canvas.bounding_box()
+            logo_box = slide.locator(".fs-cover-logo").bounding_box()
+            details = slide.locator(".fs-cover-details")
+            details_box = details.bounding_box()
+            assert slide_box and canvas_box and logo_box and details_box
+            for element in [slide.locator(".title"), *slide.locator(".subtitle, .author, .date").all()]:
+                if not element.count():
+                    continue
+                box = element.bounding_box()
+                if box:
+                    assert box["x"] >= slide_box["x"] - 1 and box["x"] + box["width"] <= slide_box["x"] + slide_box["width"] + 1
+                    assert box["y"] >= slide_box["y"] - 1 and box["y"] + box["height"] <= slide_box["y"] + slide_box["height"] + 1, f"{element.inner_text()[:60]!r}: text box {box}, slide {slide_box}, details {details.evaluate('node => [node.scrollHeight, node.clientHeight]')}, font {element.evaluate('node => getComputedStyle(node).fontSize')}"
+            assert details_box["y"] >= slide_box["y"] and details_box["y"] + details_box["height"] <= slide_box["y"] + slide_box["height"]
+            assert details.evaluate("node => node.scrollHeight <= node.clientHeight + 1"), "cover details overflow vertically"
+            title = slide.locator("h1.title")
+            title_size = title.evaluate("node => parseFloat(getComputedStyle(node).fontSize)")
+            assert 42 <= title_size <= 72, f"title size outside configured bounds: {title_size}"
+            if title_text.startswith("Evaluating long-term institutional resilience"):
+                assert title_size < 72, "an exceptionally long title did not shrink within the configured range"
+            elements = slide.locator(".title, .subtitle, .author, .date").evaluate_all("nodes => nodes.map(node => ({text: node.textContent, rect: node.getBoundingClientRect().toJSON()}))")
+            for index, current in enumerate(elements):
+                for other in elements[index + 1:]:
+                    a, b = current["rect"], other["rect"]
+                    overlap = not (a["right"] <= b["left"] or b["right"] <= a["left"] or a["bottom"] <= b["top"] or b["bottom"] <= a["top"])
+                    assert not overlap, f"cover metadata overlaps: {current['text']} / {other['text']}"
+            authors_group = slide.locator(".authors")
+            if authors_group.count():
+                author_box = authors_group.bounding_box()
+                first_author = slide.locator(".author").first.bounding_box()
+                assert author_box and first_author
+                line_top = author_box["y"]
+                assert line_top + 2 < first_author["y"], "author separator intersects author text"
+                assert author_box["x"] <= first_author["x"]
+            assert 0 <= logo_box["x"] - canvas_box["x"] <= 30 and 0 <= logo_box["y"] - canvas_box["y"] <= 30
+            normalized = (details_box["x"] / canvas_box["width"], details_box["width"] / canvas_box["width"])
+            if composition is None:
+                composition = normalized
+            else:
+                assert normalized == pytest.approx(composition, abs=0.015), "cover composition changed with metadata content"
+            assert canvas_box["width"] / 1600 == pytest.approx(canvas_box["height"] / 900, abs=0.002), "Reveal scaling changed the 16:9 canvas"
         browser.close()

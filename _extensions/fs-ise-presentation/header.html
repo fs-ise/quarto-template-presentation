@@ -8,6 +8,40 @@
     const logicalLogoWidth = 152.6;
     let logoMounted = false;
 
+    const fitCoverTitle = () => {
+      const cover = document.querySelector(".reveal .slides section.fs-cover");
+      const details = cover?.querySelector(".fs-cover-details");
+      const title = details?.querySelector("h1.title");
+      if (!details || !title) return;
+
+      const style = getComputedStyle(document.documentElement);
+      const minimum = parseFloat(style.getPropertyValue("--fs-cover-title-min-size")) || 42;
+      title.style.removeProperty("font-size");
+      const original = parseFloat(getComputedStyle(title).fontSize);
+      const fits = () => {
+        const content = [...details.querySelectorAll("h1.title, .subtitle, .authors, .date")];
+        const bounds = details.getBoundingClientRect();
+        const padding = getComputedStyle(details);
+        const top = bounds.top + parseFloat(padding.paddingTop);
+        const bottom = bounds.bottom - parseFloat(padding.paddingBottom);
+        return content.length && content[0].getBoundingClientRect().top >= top - 1
+          && content.at(-1).getBoundingClientRect().bottom <= bottom + 1;
+      };
+      if (fits()) {
+        return;
+      }
+
+      let low = minimum;
+      let high = original;
+      while (high - low > 0.5) {
+        const middle = (low + high) / 2;
+        title.style.fontSize = `${middle}px`;
+        if (fits()) low = middle;
+        else high = middle;
+      }
+      title.style.fontSize = `${Math.max(minimum, low)}px`;
+    };
+
     const sizeLogo = () => {
       const scale = window.Reveal?.getScale?.();
       if (Number.isFinite(scale) && scale > 0) {
@@ -43,10 +77,17 @@
 
       Reveal.on("ready", initializeLogo);
       Reveal.on("slidechanged", syncCoverState);
-      Reveal.on("resize", sizeLogo);
-      window.addEventListener("resize", () => requestAnimationFrame(sizeLogo));
+      Reveal.on("resize", () => {
+        sizeLogo();
+        requestAnimationFrame(fitCoverTitle);
+      });
+      window.addEventListener("resize", () => {
+        sizeLogo();
+        requestAnimationFrame(fitCoverTitle);
+      });
       if (Reveal.isReady?.()) {
         initializeLogo();
+        requestAnimationFrame(fitCoverTitle);
       } else {
         syncCoverState();
       }
