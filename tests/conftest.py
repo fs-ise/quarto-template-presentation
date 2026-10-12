@@ -62,13 +62,20 @@ def canonical_html(artifact_root):
 @pytest.fixture(scope="session")
 def copier_project(artifact_root):
     project = artifact_root / "copier-project"
+    env = os.environ.copy()
+    env.update({
+        "GIT_AUTHOR_NAME": "Copier Test",
+        "GIT_AUTHOR_EMAIL": "copier-test@example.invalid",
+        "GIT_COMMITTER_NAME": "Copier Test",
+        "GIT_COMMITTER_EMAIL": "copier-test@example.invalid",
+    })
     run([
         "copier", "copy", "--trust", "--defaults",
         "--data", "project_name=CI presentation",
         "--data", "presentation_title=A deliberately long presentation title used to verify wrapping",
         "--data", "author=CI", "--data", "subtitle=Generated noninteractively",
         "--data", f"extension_source={ROOT}", str(ROOT), str(project),
-    ], cwd=artifact_root)
+    ], cwd=artifact_root, env=env)
     return project
 
 

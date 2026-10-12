@@ -6,6 +6,13 @@ _tasks:
   - command: quarto add {{ extension_source }} --no-prompt
   - command: quarto add jmbuhr/quarto-qrcode --no-prompt
   - command: quarto add mcanouil/quarto-iconify --no-prompt
+  - command: >-
+      git init && git add -A &&
+      if git var GIT_AUTHOR_IDENT >/dev/null 2>&1 && git var GIT_COMMITTER_IDENT >/dev/null 2>&1; then
+        git commit -m "Initial commit";
+      else
+        printf '%s\n' "Git repository initialized and files staged, but no Git identity is configured. Set user.name and user.email, then run: git commit -m \"Initial commit\"";
+      fi
 _message_after_copy: |
   {{ '\033[1;32m' }}✓ Presentation "{{ presentation_title }}" created successfully!{{ '\033[0m' }}
 
@@ -13,6 +20,8 @@ _message_after_copy: |
 
     cd "{{ _copier_conf.dst_path }}"
     quarto preview presentation.qmd
+
+  The project is initialized as a Git repository. An initial commit is created when Git has a configured identity.
 
   Additional commands:
 

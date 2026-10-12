@@ -1,6 +1,6 @@
 import pytest
 
-from conftest import ROOT
+from conftest import ROOT, run
 from helpers import assert_manifest, load_yaml
 
 
@@ -54,3 +54,18 @@ def test_copier_post_generation_installs_extensions(copier_project):
         assert installed.is_dir(), f"Copier post-generation task did not install {extension}"
         assert list(installed.rglob("_extension.yml")), f"{extension} has no extension manifest"
     assert not (copier_project / copier_project.name).exists(), "Copier created a duplicated project directory"
+
+
+def test_copier_initializes_and_commits_git_repository(copier_project):
+    repository = run(["git", "rev-parse", "--is-inside-work-tree"], cwd=copier_project)
+    assert repository.stdout.strip() == "true"
+
+    commit = run(["git", "log", "-1", "--format=%s"], cwd=copier_project)
+    assert commit.stdout.strip() == "Initial commit"
+
+    tracked_files = run(["git", "ls-tree", "-r", "--name-only", "HEAD"], cwd=copier_project)
+    assert ".copier-answers.yml" in tracked_files.stdout.splitlines()
+    assert "presentation.qmd" in tracked_files.stdout.splitlines()
+
+    status = run(["git", "status", "--porcelain"], cwd=copier_project)
+    assert not status.stdout.strip(), "generated project should be clean after its initial commit"
