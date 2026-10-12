@@ -41,3 +41,16 @@ def test_copier_project_and_answers(copier_project):
     presentation = (copier_project / "presentation.qmd").read_text(encoding="utf-8")
     assert "{{< qrcode https://example.com >}}" in presentation
     assert "data-stack-name" in presentation
+
+
+def test_copier_post_generation_installs_extensions(copier_project):
+    extensions = copier_project / "_extensions"
+    for extension in (
+        "fs-ise-presentation",
+        "jmbuhr/qrcode",
+        "mcanouil/iconify",
+    ):
+        installed = extensions / extension
+        assert installed.is_dir(), f"Copier post-generation task did not install {extension}"
+        assert list(installed.rglob("_extension.yml")), f"{extension} has no extension manifest"
+    assert not (copier_project / copier_project.name).exists(), "Copier created a duplicated project directory"
