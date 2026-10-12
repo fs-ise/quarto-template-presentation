@@ -26,58 +26,40 @@ def server(directory):
 
 
 def logo_position(page):
-    result = page.locator("#fs-header").evaluate("""async logo => {
-      const reveal = document.querySelector('.reveal').getBoundingClientRect();
-      const canvas = document.querySelector('.reveal .slides').getBoundingClientRect();
-      const box = logo.getBoundingClientRect();
-      const image = logo.querySelector('img');
-      const imageBox = image.getBoundingClientRect();
-      const imageStyle = getComputedStyle(image);
-      const source = await (await fetch(image.src)).text();
-      const parsed = new DOMParser().parseFromString(source, 'image/svg+xml').documentElement;
-      parsed.style.cssText = 'position:absolute;visibility:hidden';
-      document.body.appendChild(parsed);
-      const artwork = parsed.getBBox();
-      const viewBox = parsed.viewBox.baseVal;
-      parsed.remove();
-      const imageScaleX = box.width / viewBox.width;
-      const imageScaleY = box.height / viewBox.height;
-      const visible = {
-        left: imageBox.left + (artwork.x - viewBox.x) * imageScaleX,
-        top: imageBox.top + (artwork.y - viewBox.y) * imageScaleY,
-        right: imageBox.right - (viewBox.x + viewBox.width - artwork.x - artwork.width) * imageScaleX,
-        bottom: imageBox.bottom - (viewBox.y + viewBox.height - artwork.y - artwork.height) * imageScaleY
-      };
+    result = page.locator(".reveal .slides section.present:not(.stack):not(.fs-cover)").evaluate("""slide => {
+      const style = getComputedStyle(slide, '::before');
+      const box = slide.getBoundingClientRect();
+      const scale = Reveal.getScale();
       return {
-        right: reveal.right - visible.right,
-        top: visible.top - reveal.top,
-        reveal: {left: reveal.left, top: reveal.top, right: reveal.right, bottom: reveal.bottom, width: reveal.width, height: reveal.height},
-        canvas: {left: canvas.left, top: canvas.top, right: canvas.right, bottom: canvas.bottom, width: canvas.width, height: canvas.height},
-        configuredMargin: Reveal.getConfig().margin,
-        revealScale: Reveal.getScale(),
-        logoBox: {left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height},
-        imageBox: {left: imageBox.left, top: imageBox.top, right: imageBox.right, bottom: imageBox.bottom, width: imageBox.width, height: imageBox.height},
-        imageMargins: {
-          top: imageStyle.marginTop,
-          right: imageStyle.marginRight,
-          bottom: imageStyle.marginBottom,
-          left: imageStyle.marginLeft
+        content: style.content,
+        background: style.backgroundImage,
+        transform: style.transform,
+        scale,
+        logical: {
+          width: parseFloat(style.width),
+          height: parseFloat(style.height),
+          top: parseFloat(style.top),
+          right: parseFloat(style.right),
+          slideWidth: box.width / scale,
+          slideHeight: box.height / scale
         },
-        artwork: {x: artwork.x, y: artwork.y, width: artwork.width, height: artwork.height},
-        visibleArtwork: visible,
-        visible: getComputedStyle(logo).display !== 'none',
-        directChild: logo.parentElement === document.querySelector('.reveal')
+        viewport: {
+          left: box.right - parseFloat(style.right) * scale - parseFloat(style.width) * scale,
+          top: box.top + parseFloat(style.top) * scale,
+          right: box.right - parseFloat(style.right) * scale,
+          bottom: box.top + parseFloat(style.top) * scale + parseFloat(style.height) * scale
+        },
+        belongsToSlide: style.content !== 'none' && style.position === 'absolute'
       };
     }""")
-    assert result["visible"], "shared content logo is not visible"
-    assert result["directChild"], f"content logo is not a direct child of Reveal: {result}"
-    assert all(value == "0px" for value in result["imageMargins"].values()), (
-        f"content logo image retains a computed margin: {result}"
-    )
+    assert result["belongsToSlide"], f"content logo is not attached to the content slide: {result}"
+    assert result["transform"] == "none", f"logo must not have an independent transform: {result}"
+    assert "fs_logo_blue_content.svg" in result["background"], f"content logo background is missing: {result}"
+    assert result["logical"]["width"] == pytest.approx(152.6, abs=0.2)
     return result
 
 
-def assert_logo_at_fixed_top_right(page):
+def assert_logo_on_content_slides(page):
     first = logo_position(page)
     page.evaluate("Reveal.slide(2, 0)")
     page.wait_for_timeout(150)
@@ -85,17 +67,27 @@ def assert_logo_at_fixed_top_right(page):
     page.evaluate("Reveal.slide(2, 1)")
     page.wait_for_timeout(150)
     vertical_next = logo_position(page)
-    for key, expected in (("right", 32), ("top", 24)):
-        assert first[key] == pytest.approx(expected, abs=0.75), (
-            f"visible logo artwork does not have the expected {key} inset: {first}"
-        )
-        assert abs(first[key] - vertical_start[key]) < 1.5, f"logo {key} moved between horizontal slides: {first} -> {vertical_start}"
-        assert abs(vertical_start[key] - vertical_next[key]) < 1.5, f"logo {key} moved during vertical navigation: {vertical_start} -> {vertical_next}"
+    for key, expected in (("right", 32), ("top", 24), ("height", 55.45)):
+        assert first["logical"][key] == pytest.approx(expected, abs=0.75), f"unexpected logical logo {key}: {first}"
+        assert first["logical"][key] == pytest.approx(vertical_start["logical"][key], abs=0.2)
+        assert vertical_start["logical"][key] == pytest.approx(vertical_next["logical"][key], abs=0.2)
     heading = page.locator("section.present h1, section.present h2").first.bounding_box()
-    logo = page.locator("#fs-header").bounding_box()
+    logo = first["viewport"]
     if heading and logo:
-        overlaps = not (heading["x"] + heading["width"] <= logo["x"] or logo["x"] + logo["width"] <= heading["x"] or heading["y"] + heading["height"] <= logo["y"] or logo["y"] + logo["height"] <= heading["y"])
+        overlaps = not (heading["x"] + heading["width"] <= logo["left"] or logo["right"] <= heading["x"] or heading["y"] + heading["height"] <= logo["top"] or logo["bottom"] <= heading["y"])
         assert not overlaps, "content logo overlaps the active slide heading"
+        wrapped_heading = page.locator("section.present h1, section.present h2").first.evaluate("""node => {
+          const original = node.innerHTML;
+          node.textContent = 'A deliberately long content heading that wraps over several lines to verify the reserved upper-right logo area';
+          const rect = node.getBoundingClientRect().toJSON();
+          node.innerHTML = original;
+          return rect;
+        }""")
+        overlaps = not (
+            wrapped_heading["right"] <= logo["left"] or logo["right"] <= wrapped_heading["left"]
+            or wrapped_heading["bottom"] <= logo["top"] or logo["bottom"] <= wrapped_heading["top"]
+        )
+        assert not overlaps, "a wrapped content heading overlaps the content logo"
     return {"firstContent": first, "verticalStart": vertical_start, "verticalNext": vertical_next}
 
 
@@ -172,7 +164,7 @@ def assert_simplemenu_layout(page):
 
 @pytest.mark.browser
 @pytest.mark.integration
-@pytest.mark.parametrize("viewport", [{"width": 1600, "height": 900}, {"width": 800, "height": 600}], ids=["1600x900", "embedded"])
+@pytest.mark.parametrize("viewport", [{"width": 1600, "height": 900}, {"width": 1280, "height": 720}, {"width": 800, "height": 450}, {"width": 800, "height": 600}], ids=["1600x900", "1280x720", "800x450", "800x600"])
 def test_presentation_observable_behaviour(canonical_html, viewport):
     with server(canonical_html.parent) as origin, sync_playwright() as playwright:
         browser = playwright.chromium.launch()
@@ -203,7 +195,7 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert cover_box and canvas_box
             assert 0 <= cover_box["x"] - canvas_box["x"] <= 30, "cover logo is not at the upper-left edge"
             assert 0 <= cover_box["y"] - canvas_box["y"] <= 30, "cover logo is not at the upper-left edge"
-            assert not page.locator("#fs-header").is_visible()
+            assert page.locator("section.present.fs-cover").evaluate("node => getComputedStyle(node, '::before').content") == "none"
             assert not page.locator(".menubar").is_visible()
             cover_details = page.locator("section.present.fs-cover .fs-cover-details")
             assert cover_details.evaluate("node => node.scrollHeight <= node.clientHeight"), "cover copy overflows vertically"
@@ -265,14 +257,14 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             assert numbers.first.inner_text() == number_before
 
             before = page.evaluate("Reveal.getIndices()")
-            positions = assert_logo_at_fixed_top_right(page)
+            positions = assert_logo_on_content_slides(page)
             assert page.evaluate("Reveal.getIndices()") != before, "navigation did not advance the presentation"
             assert numbers.first.inner_text() != number_before, "Simplemenu did not update the slide number during navigation"
             assert page.locator(".menubar .menu li.active").inner_text() == "Formatting", "Formatting is not the active section"
             save_content_artifact(page, "canonical", viewport, positions)
             assert page.locator("section.present:not(.stack)").evaluate(
                 "node => parseFloat(getComputedStyle(node).paddingRight)"
-            ) == pytest.approx(210, abs=0.1), "regular slides must retain content-logo clearance"
+            ) == pytest.approx(64, abs=0.1), "regular content should use standard slide padding"
 
             # The final slide contains a real, centered QR code for the
             # documented destination rather than a commented-out example.
@@ -289,8 +281,8 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
                 "node => parseFloat(getComputedStyle(node).paddingRight)"
             ) == pytest.approx(0, abs=0.1), "final QR slide must have zero right padding"
             assert final_slide.locator(":scope > h2").evaluate(
-                "node => parseFloat(getComputedStyle(node).paddingRight)"
-            ) == pytest.approx(210, abs=0.1), "final-slide heading must retain content-logo clearance"
+                "node => parseFloat(getComputedStyle(node).width)"
+            ) < final_slide.evaluate("node => node.getBoundingClientRect().width / Reveal.getScale()"), "final-slide heading must retain content-logo clearance"
             qr_content = final_slide.locator(":scope > .fs-qr-content")
             assert qr_content.evaluate(
                 "node => node.getBoundingClientRect().width"
@@ -327,15 +319,63 @@ def test_negative_incorrect_logo_position_is_detected(canonical_html):
         page.goto(f"{origin}/{canonical_html.name}", wait_until="networkidle")
         page.wait_for_function("window.Reveal && Reveal.isReady()")
         page.keyboard.press("ArrowRight")
-        page.evaluate("document.querySelector('#fs-header').style.transform = 'translateX(-120px)'")
+        page.add_style_tag(content=".reveal .slides section.present:not(.stack)::before { transform: translateX(-120px) }")
         with pytest.raises(AssertionError):
-            assert_logo_at_fixed_top_right(page)
+            assert_logo_on_content_slides(page)
         browser.close()
 
 
 @pytest.mark.browser
 @pytest.mark.integration
-@pytest.mark.parametrize("viewport", [{"width": 1600, "height": 900}, {"width": 800, "height": 600}], ids=["1600x900", "embedded"])
+def test_presentation_scales_inside_an_iframe(canonical_html):
+    with server(canonical_html.parent) as origin, sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        page = browser.new_page(viewport={"width": 1200, "height": 800})
+        page.set_content(
+            f'<iframe title="presentation" src="{origin}/{canonical_html.name}" '
+            'style="display:block;width:800px;height:450px;border:0"></iframe>'
+        )
+        frame = page.frame_locator('iframe[title="presentation"]')
+        frame.locator(".reveal").wait_for()
+        frame.locator(".reveal").evaluate("node => node.ownerDocument.defaultView.Reveal.slide(1, 0)")
+        frame.locator(".reveal .slides section.present:not(.stack):not(.fs-cover)").wait_for()
+        frame.locator(".menubar").wait_for()
+        frame.locator(".reveal .slides section.present:not(.stack):not(.fs-cover)").evaluate(
+            "slide => slide.ownerDocument.defaultView.Reveal.isReady()"
+        )
+        content_logo = frame.locator(".reveal .slides section.present:not(.stack):not(.fs-cover)")
+        dimensions = content_logo.evaluate("""slide => {
+          const mark = getComputedStyle(slide, '::before');
+          const reveal = slide.ownerDocument.defaultView.Reveal;
+          const scale = reveal.getScale();
+          const rect = slide.ownerDocument.querySelector('.reveal .slides').getBoundingClientRect();
+          return {
+            scale,
+            slideWidth: rect.width / scale,
+            slideHeight: rect.height / scale,
+            logoWidth: parseFloat(mark.width),
+            logoTop: parseFloat(mark.top),
+            logoRight: parseFloat(mark.right),
+            slideRight: rect.right
+          };
+        }""")
+        assert dimensions["slideWidth"] == pytest.approx(1600, abs=1)
+        assert dimensions["slideHeight"] == pytest.approx(900, abs=1)
+        assert dimensions["logoWidth"] == pytest.approx(152.6, abs=0.2)
+        assert dimensions["logoTop"] == pytest.approx(24, abs=0.1)
+        assert dimensions["logoRight"] == pytest.approx(32, abs=0.1)
+        frame.locator(".reveal").press("ArrowRight")
+        frame.locator(".reveal").evaluate("node => node.ownerDocument.defaultView.Reveal.slide(2, 1)")
+        assert frame.locator("section.present").count() > 0
+        assert frame.locator(".menubar").is_visible()
+        frame.locator(".slide-menu-button").click()
+        assert frame.locator(".slide-menu").is_visible()
+        browser.close()
+
+
+@pytest.mark.browser
+@pytest.mark.integration
+@pytest.mark.parametrize("viewport", [{"width": 1600, "height": 900}, {"width": 1280, "height": 720}, {"width": 800, "height": 450}, {"width": 800, "height": 600}], ids=["1600x900", "1280x720", "800x450", "800x600"])
 def test_generated_project_layout_and_controls(generated_html, viewport):
     """Exercise installed template assets, rather than only the source deck."""
     with server(generated_html.parent) as origin, sync_playwright() as playwright:
@@ -369,7 +409,7 @@ def test_generated_project_layout_and_controls(generated_html, viewport):
             footer["x"] + footer["width"] / 2, abs=1.5
         ), "generated Simplemenu links are not centered against the full slide"
         assert_simplemenu_layout(page)
-        positions = assert_logo_at_fixed_top_right(page)
+        positions = assert_logo_on_content_slides(page)
         save_content_artifact(page, "copier", viewport, positions)
 
         menu_button = page.locator(".slide-menu-button")

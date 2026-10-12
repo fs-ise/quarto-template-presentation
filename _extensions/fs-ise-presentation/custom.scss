@@ -1,16 +1,29 @@
 /*-- scss:defaults --*/
 
-/* FS-ISE presentation defaults. See Quarto's reveal.js theme documentation
-   for supported Sass variables. */
+/* Logical slide typography; Reveal scales the complete 1600 × 900 canvas. */
 $presentation-font-size-root: 36px;
 
 /*-- scss:rules --*/
 
-/* --- header sizing + spacing --- */
-:root { 
-  /* Cover dimensions are logical slide pixels. The content width is also
-     logical; header.html converts it with Reveal.getScale() for the root-level
-     overlay so the mark stays proportional in windows and embedded decks. */
+/* Centralized dimensions use logical slide pixels and scale with Reveal's canvas. */
+:root {
+  --fs-brand-blue: #002EFF;
+  --fs-brand-black: #000000;
+  --fs-font-family: "Source Sans Pro", sans-serif;
+  --fs-body-font-size: 36px;
+  --fs-heading-1-size: 72px;
+  --fs-heading-2-size: 54px;
+  --fs-heading-3-size: 44px;
+  --fs-slide-padding-block-start: 48px;
+  --fs-slide-padding-inline: 64px;
+  --fs-footer-clearance: 92px;
+  --fs-heading-spacing: 0 0 0.65em;
+  --fs-logo-width: 152.6px;
+  --fs-logo-inset-top: 24px;
+  --fs-logo-inset-right: 32px;
+  --fs-logo-clearance: 210px;
+
+  /* Cover-only composition dimensions. */
   --fs-cover-logo-width: 224px;
   --fs-cover-content-right: 8%;
   --fs-cover-content-gutter: 5%;
@@ -21,15 +34,7 @@ $presentation-font-size-root: 36px;
   --fs-cover-subtitle-size: 42px;
   --fs-cover-author-size: 32px;
   --fs-cover-date-size: 28px;
-  /* The content-only asset is cropped to its artwork. 152.6px preserves the
-     artwork size produced by the original 166px-wide, whitespace-padded SVG. */
-  --fs-content-logo-width: 152.6px;
   --fs-edge-inset: 12px;
-  --fs-content-logo-top: 24px;
-  --fs-content-logo-right: 32px;
-  --fs-logo-clearance: 210px;
-  --brand-color: #002EFF;   /* Frankfurt blue from the logo */
-  --font-family: "Source Sans Pro", sans-serif;
 }
 
 /* The title partial owns the cover layout, keeping these rules isolated from
@@ -44,12 +49,12 @@ $presentation-font-size-root: 36px;
   grid-template-rows: minmax(0, 1fr);
   align-items: center;
   text-align: initial;
-  color: #000000;
+  color: var(--fs-brand-black);
   box-sizing: border-box;
   container-type: inline-size;
 }
 
-/* Both cover and content logos share their visible size and edge inset. */
+/* The title slide has its own upper-left brand mark. */
 .reveal .slides section.fs-cover .fs-cover-logo {
   position: absolute;
   top: var(--fs-edge-inset);
@@ -89,7 +94,7 @@ $presentation-font-size-root: 36px;
 .reveal .slides section.fs-cover h1.title {
   margin: 0;
   color: #000000;
-  font-family: var(--font-family);
+  font-family: var(--fs-font-family);
   width: 100%;
   font-size: clamp(var(--fs-cover-title-min-size), 4.5cqw, var(--fs-cover-title-max-size));
   font-weight: 700;
@@ -101,7 +106,7 @@ $presentation-font-size-root: 36px;
 
 .reveal .slides section.fs-cover .subtitle {
   margin: 0;
-  color: #000000;
+  color: var(--fs-brand-black);
   width: 100%;
   font-size: var(--fs-cover-subtitle-size);
   line-height: 1.3;
@@ -112,7 +117,7 @@ $presentation-font-size-root: 36px;
 .reveal .slides section.fs-cover .author {
   width: 100%;
   margin: 0;
-  color: #000000;
+  color: var(--fs-brand-black);
   font-size: var(--fs-cover-author-size);
   line-height: 1.25;
   overflow-wrap: anywhere;
@@ -122,7 +127,7 @@ $presentation-font-size-root: 36px;
 .reveal .slides section.fs-cover .date {
   width: 100%;
   margin: 0;
-  color: #000000;
+  color: var(--fs-brand-black);
   font-size: var(--fs-cover-date-size);
   line-height: 1.25;
   overflow-wrap: anywhere;
@@ -144,13 +149,10 @@ $presentation-font-size-root: 36px;
   top: 0;
   left: 0;
   width: min(96px, 18%);
-  border-top: 2px solid var(--brand-color);
+  border-top: 2px solid var(--fs-brand-blue);
 }
 
-/* Reveal's data-state class is placed on the viewport in some versions and on
-   the document element in others. header.html therefore mirrors the active
-   slide onto this stable class instead of depending on html.fs-cover-active. */
-html.fs-cover-visible #fs-header,
+/* Keep the title-slide branding separate and retain its clean navigation. */
 html.fs-cover-visible .slide-number,
 html.fs-cover-visible #custom-slide-number,
 html.fs-cover-visible .reveal .progress,
@@ -159,11 +161,38 @@ html.fs-cover-visible .slide-menu-button {
   display: none !important;
 }
 
-/* The reserved column prevents every kind of flow content (not just headings)
-   from entering the logo area. */
+/* Standard content padding preserves usable width for body content. Only the
+   heading reserves a clear area under the upper-right brand mark. */
 .reveal .slides section:not(.stack):not(.fs-cover) {
   box-sizing: border-box;
-  padding-right: var(--fs-logo-clearance) !important;
+  padding: var(--fs-slide-padding-block-start) var(--fs-slide-padding-inline)
+    var(--fs-footer-clearance) !important;
+}
+
+.reveal .slides section:not(.stack):not(.fs-cover) > :is(h1, h2, h3) {
+  width: calc(100% - var(--fs-logo-clearance));
+}
+
+.reveal h1 { font-size: var(--fs-heading-1-size); }
+.reveal h2 {
+  margin: var(--fs-heading-spacing);
+  font-size: var(--fs-heading-2-size);
+}
+.reveal h3 { font-size: var(--fs-heading-3-size); }
+.reveal .slides { font-size: var(--fs-body-font-size); }
+
+/* The decorative mark is attached to every content slide, so Reveal's native
+   slide transform scales its size and insets together with all slide content. */
+.reveal .slides section:not(.stack):not(.fs-cover)::before {
+  content: "";
+  position: absolute;
+  top: var(--fs-logo-inset-top);
+  right: var(--fs-logo-inset-right);
+  width: var(--fs-logo-width);
+  aspect-ratio: 159.974 / 58.162;
+  background: url("../../../../../figures/fs_logo_blue_content.svg") center / 100% 100% no-repeat;
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* The closing QR slide uses the whole canvas so its code is truly centred.
@@ -171,11 +200,12 @@ html.fs-cover-visible .slide-menu-button {
    and can therefore be laid out against the full slide width safely. */
 .reveal .slides section.fs-qr-slide:not(.stack):not(.fs-cover) {
   padding-right: 0 !important;
+  padding-left: 0 !important;
 }
 
 .reveal .slides section.fs-qr-slide > h2 {
   box-sizing: border-box;
-  padding-right: var(--fs-logo-clearance);
+  width: calc(100% - var(--fs-logo-clearance));
 }
 
 .reveal .slides section.fs-qr-slide > .fs-qr-content {
@@ -203,47 +233,14 @@ html.fs-cover-visible .slide-menu-button {
   margin: 0.2em 0;
 }
 
-/* Top-right decorative logo */
-.reveal > #fs-header {
-  position: absolute;
-  top: var(--fs-content-logo-top);
-  right: var(--fs-content-logo-right);
-  left: auto;
-  width: var(--fs-content-logo-width);
-  margin: 0;
-  padding: 0;
-  background: none;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-  pointer-events: none;
-  z-index: 30;
-}
-
 html,
 body,
 .reveal,
 .reveal .slides {
-  font-family: var(--font-family);
+  font-family: var(--fs-font-family);
 }
 
-/* Match the visible cover-logo size without distorting either asset. */
-.reveal > #fs-header img {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-width: none;
-  max-height: none;
-  margin: 0;
-  padding: 0;
-  background: none;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-/* IMPORTANT: no extra margin-top — don't push slides down */
+/* Do not add a top margin that shifts the Reveal canvas. */
 .reveal .slides{
   margin-top: 0 !important;
 }
@@ -252,7 +249,7 @@ body,
   height: 100%;        /* ensure the inner bar fills the new height */
 }
 
-/* --- ensure menus/overlays are ABOVE the header --- */
+/* Keep menus and overlays above slide content. */
 .reveal .slide-menu { z-index: 9999 !important; }
 .reveal .overlay,
 .reveal .drawer,
@@ -264,7 +261,7 @@ body,
   z-index: 200 !important;
   height: 7px;
   background-color: rgba(0, 0, 0, .2);
-  color: var(--brand-color);
+  color: var(--fs-brand-blue);
 }
 
 .reveal .slides section aside {
@@ -276,11 +273,6 @@ body,
   font-size: 0.5em;     /* optional: make it a bit smaller */
 }
 
-/* Leave breathing room above the persistent section navigation. */
-.reveal .slides section:not(.stack):not(.fs-cover) {
-  padding-bottom: 76px !important;
-}
-
 /* Diagram centring is opt-in so other figures retain Reveal's defaults. */
 .reveal .slides .fs-centered-diagram .cell-output-display,
 .reveal .slides .fs-centered-diagram svg {
@@ -289,12 +281,10 @@ body,
   max-width: 100%;
 }
 
-.reveal h2 {
-  margin-bottom: 1em;  /* Increase to 1.5em or 2em if you want more space */
-}
-
 .reveal .slides section.level1.center {
-  top: 320px !important;  /* smaller than 379px = higher on the screen */
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .reveal .smaller {

@@ -8,7 +8,6 @@ def assert_rendered_presentation(html):
     assert elements(html, "section", data_state="fs-cover-active"), "rendered cover state is missing"
     assert elements(html, "section", data_background_image="figures/title_background.png"), "cover background is missing"
     assert elements(html, "img", src="figures/fs_logo_blue.svg"), "rendered cover logo is missing"
-    assert elements(html, "img", src="figures/fs_logo_blue_content.svg"), "rendered content logo is missing"
     assert elements(html, "script", src="presentation_files/libs/revealjs/plugin/simplemenu/simplemenu.js") or any(
         "simplemenu" in (item.get("src") or "") for item in elements(html, "script")
     ), "rendered presentation does not load Simplemenu"

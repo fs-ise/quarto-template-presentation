@@ -1,13 +1,10 @@
-<header id="fs-header" aria-hidden="true">
-  <img src="figures/fs_logo_blue_content.svg" alt="" />
-</header>
+<link rel="preload" as="image" href="figures/fs_logo_blue_content.svg" />
 <script>
   (() => {
     const coverClass = "fs-cover-visible";
-    const logo = document.getElementById("fs-header");
-    const logicalLogoWidth = 152.6;
-    let logoMounted = false;
 
+    // Keep long title metadata readable while preserving the content-driven
+    // cover layout. Reveal itself remains responsible for canvas scaling.
     const fitCoverTitle = () => {
       const cover = document.querySelector(".reveal .slides section.fs-cover");
       const details = cover?.querySelector(".fs-cover-details");
@@ -27,9 +24,7 @@
         return content.length && content[0].getBoundingClientRect().top >= top - 1
           && content.at(-1).getBoundingClientRect().bottom <= bottom + 1;
       };
-      if (fits()) {
-        return;
-      }
+      if (fits()) return;
 
       let low = minimum;
       let high = original;
@@ -42,13 +37,6 @@
       title.style.fontSize = `${Math.max(minimum, low)}px`;
     };
 
-    const sizeLogo = () => {
-      const scale = window.Reveal?.getScale?.();
-      if (Number.isFinite(scale) && scale > 0) {
-        logo.style.width = `${logicalLogoWidth * scale}px`;
-      }
-    };
-
     const syncCoverState = (event) => {
       const currentSlide = event?.currentSlide || window.Reveal?.getCurrentSlide();
       document.documentElement.classList.toggle(
@@ -57,39 +45,19 @@
       );
     };
 
-    const initializeLogo = (event) => {
-      if (!logoMounted) {
-        const revealRoot = document.querySelector(".reveal");
-        if (revealRoot) {
-          revealRoot.appendChild(logo);
-          logoMounted = true;
-        }
-      }
-      sizeLogo();
-      syncCoverState(event);
-    };
-
     const bindReveal = () => {
       if (!window.Reveal?.on) {
         window.setTimeout(bindReveal, 25);
         return;
       }
 
-      Reveal.on("ready", initializeLogo);
+      Reveal.on("ready", syncCoverState);
       Reveal.on("slidechanged", syncCoverState);
-      Reveal.on("resize", () => {
-        sizeLogo();
-        requestAnimationFrame(fitCoverTitle);
-      });
-      window.addEventListener("resize", () => {
-        sizeLogo();
-        requestAnimationFrame(fitCoverTitle);
-      });
+      Reveal.on("resize", () => requestAnimationFrame(fitCoverTitle));
+      window.addEventListener("resize", () => requestAnimationFrame(fitCoverTitle));
       if (Reveal.isReady?.()) {
-        initializeLogo();
-        requestAnimationFrame(fitCoverTitle);
-      } else {
         syncCoverState();
+        requestAnimationFrame(fitCoverTitle);
       }
     };
 
