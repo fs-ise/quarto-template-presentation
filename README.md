@@ -47,6 +47,14 @@ To render this repository's example presentation:
 quarto render template.qmd
 ```
 
+## Development
+
+To preview changes run
+
+```
+quarto render template.qmd
+```
+
 ## Update a Copier project
 
 To update the generated project from the latest template:
