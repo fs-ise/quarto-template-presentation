@@ -44,7 +44,26 @@ def test_copier_project_and_answers(copier_project):
     assert "{{< qrcode https://example.com >}}" in presentation
     assert '## Welcome {data-name="Introduction"}' in presentation
     assert '## Your main idea {data-name="Main idea"}' in presentation
-    assert '## Thank you! {data-name="Conclusion" .fs-qr-slide}' in presentation
+    assert '## Let’s discuss {data-name="Conclusion"}' in presentation
+    assert presentation.count('data-fragment-index="0"') == 2
+    assert ".closing-thanks" in presentation
+    assert presentation.count(":::: {.columns}") == 2
+    assert presentation.count('::: {.column .presenter-card width="33%"}') == 3
+    assert '::: {.column .center-column width="35%"}' in presentation
+    assert ":::: {.fragment data-fragment-index=\"0\"}" in presentation
+    assert ".research-card" not in presentation
+    assert "**Presenter One**" in presentation
+    assert "**Thank you — we look forward to the discussion.**" in presentation
+    assert "> Research creates impact when credible evidence leads to a clear next step." in presentation
+    assert "### Explore the research" in presentation
+    assert "### [Explore the research](https://example.com)" not in presentation
+    assert "[name@institution.edu](mailto:name@institution.edu)" in presentation
+    assert "[github.com/presenter-one](https://github.com/presenter-one)" in presentation
+    assert "LinkedIn" not in presentation
+    assert "[Paper]" not in presentation
+    assert "[Slides]" not in presentation
+    assert "fs-qr-slide" not in presentation
+    assert "fs-discussion-prompts" not in presentation
     assert "data-stack-name" not in presentation
 
 
@@ -73,7 +92,14 @@ def test_copier_initializes_and_commits_git_repository(copier_project):
     assert "presentation.qmd" in tracked_files.stdout.splitlines()
 
     status = run(["git", "status", "--porcelain"], cwd=copier_project)
-    assert not status.stdout.strip(), "generated project should be clean after its initial commit"
+    rendered_assets = {
+        "?? figures/fs_logo_blue.svg",
+        "?? figures/fs_logo_blue_content.svg",
+        "?? figures/title_background.png",
+    }
+    assert set(status.stdout.splitlines()) <= rendered_assets, (
+        "only Quarto-copied extension assets may appear after rendering the generated project"
+    )
 
 
 def test_copier_skips_git_setup_inside_existing_repository(artifact_root):

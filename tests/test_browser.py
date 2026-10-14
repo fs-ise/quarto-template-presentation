@@ -146,6 +146,217 @@ def navigation_links_box(page):
     }""")
 
 
+def assert_closing_slide(page):
+    slides = page.locator(".reveal .slides > section:not(.stack)")
+    final_slide = slides.last
+    assert "present" in (final_slide.get_attribute("class") or "").split()
+    assert final_slide.locator(":scope > h2").inner_text() in {"Let’s discuss", "Summary & Outlook"}
+
+    top_columns = final_slide.locator(":scope > .columns:not(.fragment)")
+    assert top_columns.count() == 1
+    top_columns = top_columns.first
+    top_cards = top_columns.locator(":scope > .column")
+    assert top_cards.count() == 2
+    research_column = top_cards.nth(1)
+    assert "center-column" in (research_column.get_attribute("class") or "").split()
+    left_column = top_cards.nth(0)
+    blockquotes = left_column.locator("blockquote")
+    if left_column.get_by_role("heading", name="Key takeaways").count():
+        assert left_column.get_by_role("heading", name="For discussion").count() == 1
+        assert blockquotes.count() == 2
+    else:
+        assert left_column.get_by_role("heading", name="For discussion").count() == 0
+        assert blockquotes.count() == 1
+        assert "Which assumption would you revisit" in blockquotes.first.inner_text()
+        assert "extended journal version" in blockquotes.first.inner_text()
+    assert "Research creates impact when credible evidence leads to a clear next step." in blockquotes.nth(0).inner_text()
+    for quote in blockquotes.all():
+        assert quote.evaluate("node => getComputedStyle(node).borderLeftColor") == "rgb(0, 46, 255)"
+
+    research_url = "https://example.com"
+    qr = top_columns.locator(f'svg[data-qrcode-value="{research_url}"]')
+    research_fragment = research_column.locator(":scope > .fragment")
+    assert research_fragment.count() == 1
+    assert "research-card" not in (research_fragment.get_attribute("class") or "").split()
+    research_surface = research_fragment.evaluate("""node => {
+      const style = getComputedStyle(node);
+      return {
+        background: style.backgroundColor,
+        borderStyle: style.borderTopStyle,
+        borderWidth: style.borderTopWidth,
+        borderRadius: style.borderTopLeftRadius,
+        padding: style.padding
+      };
+    }""")
+    assert research_surface == {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderStyle": "none",
+        "borderWidth": "0px",
+        "borderRadius": "0px",
+        "padding": "0px",
+    }, f"research QR block unexpectedly has a card surface: {research_surface}"
+    research_heading = research_fragment.locator("h3")
+    assert research_heading.count() == 1
+    assert research_heading.text_content() == "Explore the research"
+    assert research_heading.locator("a").count() == 0, "research heading should be plain text"
+    assert research_heading.evaluate("node => getComputedStyle(node).textAlign") == "center"
+    assert qr.count() == 1
+    for label in ("Paper", "Slides"):
+        assert top_columns.get_by_role("link", name=label).count() == 0, f"separate {label} link should be omitted"
+
+    animated_block = final_slide.locator(":scope > .closing-thanks.fragment")
+    assert animated_block.count() == 1
+    assert "Thank you — we look forward to the discussion." in animated_block.text_content()
+    profile_row = animated_block.locator(":scope > .columns")
+    assert profile_row.count() == 1
+    profile_row = profile_row.first
+    assert research_fragment.get_attribute("data-fragment-index") == "0"
+    assert animated_block.get_attribute("data-fragment-index") == "0"
+    profile_columns = profile_row.locator(":scope > .column")
+    assert profile_columns.count() == 3
+    presenter_cards = profile_columns.all()
+    assert all("presenter-card" in (card.get_attribute("class") or "").split() for card in presenter_cards)
+    for card in presenter_cards:
+        surface = card.evaluate("""node => {
+          const style = getComputedStyle(node);
+          return {
+            background: style.backgroundColor,
+            borderColor: style.borderTopColor,
+            borderStyle: style.borderTopStyle,
+            borderWidth: style.borderTopWidth,
+            borderRadius: style.borderTopLeftRadius,
+            boxSizing: style.boxSizing,
+            padding: style.padding
+          };
+        }""")
+        assert surface == {
+            "background": "rgb(243, 246, 255)",
+            "borderColor": "rgb(215, 225, 255)",
+            "borderStyle": "solid",
+            "borderWidth": "1px",
+            "borderRadius": "0px",
+            "boxSizing": "border-box",
+            "padding": "16px",
+        }, f"closing slide card surface is inconsistent: {surface}"
+    assert profile_columns.nth(0).locator("p strong").text_content().strip() in {
+        "Presenter One",
+        "Presenter 1 Name",
+    }
+    expected_github = {
+        "Presenter One": ("github.com/presenter-one", "https://github.com/presenter-one"),
+        "Presenter 1 Name": ("github.com/presenter1", "https://github.com/presenter1"),
+        "Presenter 2 Name": ("github.com/presenter2", "https://github.com/presenter2"),
+        "Presenter 3 Name": ("github.com/presenter3", "https://github.com/presenter3"),
+    }
+    for card in profile_columns.all():
+        name = card.locator("p strong").text_content().strip()
+        assert card.locator("p strong").count() == 1, "each presenter card needs a name"
+        links = card.locator("a").evaluate_all("nodes => nodes.map(node => ({text: node.textContent.trim(), href: node.getAttribute('href')}))")
+        assert len(links) in (1, 2)
+        email = next(link for link in links if "@institution.edu" in link["text"])
+        assert email["href"] == f"mailto:{email['text']}"
+        github_links = [link for link in links if link["text"].startswith("github.com/")]
+        if github_links:
+            assert len(github_links) == 1
+            assert (github_links[0]["text"], github_links[0]["href"]) == expected_github[name]
+        assert all(link["text"] != "LinkedIn" for link in links)
+        assert card.locator("a").evaluate_all(
+            "nodes => nodes.every(node => getComputedStyle(node).color === 'rgb(0, 46, 255)')"
+        )
+    assert top_columns.locator("a[href^='mailto:']").count() == 0
+
+    assert not research_fragment.evaluate("node => node.classList.contains('visible')")
+    assert not animated_block.evaluate("node => node.classList.contains('visible')"), (
+        "research, thank-you message, and presenter cards should begin hidden"
+    )
+    assert not qr.is_visible(), "research QR should begin hidden with the shared reveal group"
+    assert not profile_row.is_visible(), "presenter cards should begin hidden with the thank-you message"
+    final_slide.evaluate("""slide => {
+      const reveal = slide.ownerDocument.defaultView.Reveal;
+      reveal.nextFragment();
+      return new Promise(resolve => setTimeout(resolve, 150));
+    }""")
+    assert research_fragment.evaluate("node => node.classList.contains('visible')"), (
+        "the research heading and QR should reveal with the closing block"
+    )
+    assert animated_block.evaluate("node => node.classList.contains('visible')"), (
+        "one advance should reveal the thank-you message and presenter cards"
+    )
+    assert qr.is_visible(), "research QR should reveal with the closing block"
+    assert profile_row.is_visible(), "presenter cards should appear with the thank-you message"
+
+    layout = final_slide.evaluate("""slide => {
+      const scale = Reveal.getScale();
+      const slideBox = slide.getBoundingClientRect();
+      const top = slide.querySelector(':scope > .columns:not(.fragment)');
+      const topBox = top.getBoundingClientRect();
+      const topColumnBoxes = [...top.querySelectorAll(':scope > .column')]
+        .map(column => column.getBoundingClientRect());
+      const animated = slide.querySelector(':scope > .fragment');
+      const animatedBox = animated.getBoundingClientRect();
+      const message = animated.querySelector(':scope > p');
+      const messageBox = message.getBoundingClientRect();
+      const cards = animated.querySelector(':scope > .columns');
+      const cardsBox = cards.getBoundingClientRect();
+      const cardBoxes = [...cards.querySelectorAll(':scope > .column')]
+        .map(column => column.getBoundingClientRect());
+      const cardsStyle = getComputedStyle(cards);
+      const style = getComputedStyle(slide);
+      const closingStyle = getComputedStyle(animated);
+      return {
+        scale,
+        slide: {left: slideBox.left, right: slideBox.right, bottom: slideBox.bottom},
+        top: {left: topBox.left, right: topBox.right, bottom: topBox.bottom},
+        topColumnWidths: topColumnBoxes.map(box => box.width),
+        animated: {left: animatedBox.left, right: animatedBox.right, top: animatedBox.top, bottom: animatedBox.bottom},
+        message: {top: messageBox.top, bottom: messageBox.bottom},
+        cards: {left: cardsBox.left, right: cardsBox.right, top: cardsBox.top, bottom: cardsBox.bottom},
+        cardWidths: cardBoxes.map(box => box.width),
+        cardGaps: cardBoxes.slice(1).map((box, index) => box.left - cardBoxes[index].right),
+        cardGap: parseFloat(cardsStyle.columnGap),
+        closingMarginTop: parseFloat(closingStyle.marginTop),
+        rightInset: parseFloat(style.paddingRight) * scale,
+        footerClearance: parseFloat(style.paddingBottom) * scale
+      };
+    }""")
+    assert layout["topColumnWidths"][0] > layout["topColumnWidths"][1], f"left column should be wider: {layout}"
+    assert layout["top"]["left"] >= layout["slide"]["left"] - 1, f"top columns overflow left: {layout}"
+    assert layout["top"]["right"] <= layout["slide"]["right"] - layout["rightInset"] + 1, (
+        f"top columns exceed the slide's content width: {layout}"
+    )
+    assert layout["animated"]["left"] >= layout["slide"]["left"] - 1, f"animated closing block overflows left: {layout}"
+    assert layout["animated"]["right"] <= layout["slide"]["right"] - layout["rightInset"] + 1, (
+        f"animated closing block exceeds the slide's content width: {layout}"
+    )
+    assert max(layout["cardWidths"]) - min(layout["cardWidths"]) <= 2, (
+        f"presenter cards should have equal widths: {layout}"
+    )
+    assert layout["cardGap"] == pytest.approx(16, abs=0.1), f"presenter cards need a 16px gap: {layout}"
+    assert all(gap > 0 for gap in layout["cardGaps"]), f"presenter cards are touching or overlapping: {layout}"
+    assert layout["animated"]["top"] >= layout["top"]["bottom"] - 1, (
+        f"animated closing block is not below the top columns: {layout}"
+    )
+    assert layout["closingMarginTop"] >= 12, f"thank-you block needs a little space above it: {layout}"
+    assert layout["cards"]["top"] >= layout["message"]["bottom"] - 1, (
+        f"presenter cards are not below the thank-you message: {layout}"
+    )
+    assert layout["cards"]["bottom"] <= layout["slide"]["bottom"] - layout["footerClearance"] + 1, (
+        f"profile cards overlap the reserved footer area: {layout}"
+    )
+
+    qr_box = qr.bounding_box()
+    heading_box = research_heading.bounding_box()
+    canvas_box = page.locator(".reveal .slides").bounding_box()
+    research_column_box = research_column.bounding_box()
+    assert qr_box and heading_box and canvas_box and research_column_box
+    assert qr_box["width"] >= 270 * canvas_box["width"] / 1600, "QR code was not enlarged for scanning"
+    column_center = research_column_box["x"] + research_column_box["width"] / 2
+    qr_center = qr_box["x"] + qr_box["width"] / 2
+    heading_center = heading_box["x"] + heading_box["width"] / 2
+    assert qr_center == pytest.approx(column_center, abs=2), "QR code is not centered in its column"
+    assert heading_center == pytest.approx(column_center, abs=2), "research heading is not centered in its column"
+
+
 def assert_simplemenu_layout(page):
     menu = page.locator(".menubar")
     dimensions = menu.evaluate("""node => {
@@ -259,7 +470,7 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             page.wait_for_timeout(150)
 
             groups = page.locator(".menubar .menu li").all_inner_texts()
-            assert groups == ["Introduction", "Formatting", "Examples"], f"Simplemenu groups are wrong: {groups}; state={browser_state(page)}"
+            assert groups == ["Introduction", "Formatting", "Examples", "Conclusion"], f"Simplemenu groups are wrong: {groups}; state={browser_state(page)}"
             links = page.locator(".menubar .menu a").evaluate_all(
                 "items => Object.fromEntries(items.map(item => [item.textContent, item.getAttribute('href')]))"
             )
@@ -359,40 +570,11 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
                 f"content title/body inset did not move up and left together: {content_padding}"
             )
 
-            # The final slide contains a real, centered QR code for the
-            # documented destination rather than a commented-out example.
+            # The final slide keeps its resource columns and reveals the
+            # thank-you message and presenter cards in sequence.
             page.evaluate("Reveal.slide(Reveal.getHorizontalSlides().length - 1)")
             page.wait_for_timeout(150)
-            final_slide = page.locator(".reveal .slides section.present:not(.stack)")
-            assert "fs-qr-slide" in (final_slide.get_attribute("class") or "").split(), (
-                "Quarto did not attach fs-qr-slide to the rendered section"
-            )
-            assert "fs-qr-slide" not in (final_slide.locator("h2").get_attribute("class") or "").split(), (
-                "Quarto attached fs-qr-slide to the heading instead of the rendered section"
-            )
-            assert final_slide.evaluate(
-                "node => parseFloat(getComputedStyle(node).paddingRight)"
-            ) == pytest.approx(0, abs=0.1), "final QR slide must have zero right padding"
-            assert final_slide.locator(":scope > h2").evaluate(
-                "node => parseFloat(getComputedStyle(node).width)"
-            ) < final_slide.evaluate("node => node.getBoundingClientRect().width / Reveal.getScale()"), "final-slide heading must retain content-logo clearance"
-            qr_content = final_slide.locator(":scope > .fs-qr-content")
-            assert qr_content.evaluate(
-                "node => node.getBoundingClientRect().width"
-            ) == pytest.approx(final_slide.evaluate(
-                "node => node.getBoundingClientRect().width"
-            ), abs=0.1), "QR-code container does not occupy the full slide width"
-            qr = page.locator('section.present svg[data-qrcode-value="https://example.com"]')
-            assert qr.is_visible(), "final QR code is not visible"
-            qr_box = qr.bounding_box()
-            slide_box = page.locator(
-                ".reveal .slides section.present:not(.stack)"
-            ).bounding_box()
-            assert qr_box and slide_box
-            assert qr_box["x"] + qr_box["width"] / 2 == pytest.approx(
-                slide_box["x"] + slide_box["width"] / 2, abs=2
-            ), "QR code is not centered"
-            assert qr_box["width"] >= 100 * canvas_box["width"] / 1600, "QR code is too small to scan"
+            assert_closing_slide(page)
             assert not exceptions, f"uncaught browser exceptions: {exceptions}; state={browser_state(page)}"
             assert not failed, f"browser failed to load resources: {failed}"
         except Exception:
@@ -476,6 +658,13 @@ def test_presentation_scales_inside_an_iframe(canonical_html):
         assert_simplemenu_layout(frame)
         frame.locator(".slide-menu-button").click()
         assert frame.locator(".slide-menu").is_visible()
+        frame.locator(".reveal").press("Escape")
+        frame.locator(".reveal").evaluate("""node => {
+          const reveal = node.ownerDocument.defaultView.Reveal;
+          reveal.slide(reveal.getHorizontalSlides().length - 1);
+        }""")
+        frame.locator(".reveal .slides section.present h2").wait_for()
+        assert_closing_slide(frame)
         browser.close()
 
 
@@ -591,6 +780,7 @@ def test_generated_project_layout_and_controls(generated_html, viewport):
         page.wait_for_timeout(150)
         assert "active" in (conclusion.get_attribute("class") or "").split()
         assert "/" in page.locator(".menubar .slide-number:visible").inner_text()
+        assert_closing_slide(page)
         assert not exceptions, f"generated presentation raised browser exceptions: {exceptions}"
         browser.close()
 

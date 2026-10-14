@@ -43,9 +43,11 @@ def test_clean_quarto_use_template_uses_checkout(artifact_root):
     document = documents[0]
 
     generated_entries = {path.name for path in project.iterdir()}
-    assert generated_entries == {"_extensions", document.name}, (
+    assert generated_entries == {"_extensions", "figures", document.name}, (
         f"unexpected repository infrastructure in generated project: {sorted(generated_entries)}"
     )
+    for asset in ("fs_logo_blue.svg", "fs_logo_blue_content.svg", "title_background.png"):
+        assert (project / "figures" / asset).is_file(), f"generated project omitted extension resource {asset}"
     run(["quarto", "render", document.name], cwd=project)
     assert_resources_exist(document.with_suffix(".html"))
 

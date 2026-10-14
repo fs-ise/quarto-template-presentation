@@ -80,6 +80,20 @@ For an interactive preview:
 quarto preview presentation.qmd
 ```
 
+## Customize the closing slide
+
+Edit the final `Let’s discuss` slide directly in `presentation.qmd` in a
+Copier-generated project, or `template.qmd` for this repository's example.
+The top two columns contain one quoted example takeaway and the discussion
+prompt, with a larger QR code under the plain **Explore the research** heading.
+Advance once to reveal the thank-you message and all three presenter cards
+together with the Explore heading and QR code. Links and quote rules use the
+Frankfurt blue accent. Edit each card's Markdown name, affiliation, visible
+email, and profile links directly; remove or duplicate a `.column` to change
+the presenter count. The repository's offline QR asset encodes
+`https://example.com`; update the asset as well if you change the shortcode
+destination.
+
 To render this repository's example presentation:
 
 ```

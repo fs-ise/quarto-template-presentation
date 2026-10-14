@@ -84,18 +84,57 @@ flowchart TD
 ```
 :::
 
-## Thank you! {.fs-qr-slide}
+## Summary & Outlook {data-name="Conclusion"}
 
-::: {.fs-discussion-prompts}
-**Discussion prompts**
+<br>
 
-- Which assumptions would you challenge?
-- What additional evidence would change your interpretation?
-- What should we investigate next?
+:::: {.columns}
+::: {.column width="65%"}
+
+> Research creates impact when credible evidence leads to a clear next step.
+> 
+> - Which assumption would you revisit, and what evidence would change your view?
+> - What could be expected in an extended journal version?
 :::
 
-::: {.fs-qr-content}
-{{< qrcode https://example.com >}}
+::: {.column .center-column width="35%"}
+:::: {.fragment data-fragment-index="0"}
+### Explore the research
 
-[https://example.com](https://example.com)
+{{< qrcode https://example.com >}}
+::::
+:::
+::::
+
+
+::: {.fragment .closing-thanks data-fragment-index="0"}
+**Thank you — we look forward to the discussion.**
+
+<br><br>
+
+:::: {.columns}
+::: {.column .presenter-card width="33%"}
+**Presenter 1 Name**
+
+*Affiliation*
+
+[presenter1@institution.edu](mailto:presenter1@institution.edu)  
+:::
+
+::: {.column .presenter-card width="33%"}
+**Presenter 2 Name**
+
+*Affiliation*
+
+[presenter2@institution.edu](mailto:presenter2@institution.edu)  
+:::
+
+::: {.column .presenter-card width="33%"}
+**Presenter 3 Name**
+
+*Affiliation*
+
+[presenter3@institution.edu](mailto:presenter3@institution.edu)  
+:::
+::::
 :::

@@ -23,6 +23,10 @@ $presentation-font-size-root: 36px;
   --fs-logo-inset-top: 0px;
   --fs-logo-inset-right: 0px;
   --fs-logo-clearance: 210px;
+  --fs-presenter-card-background: #f3f6ff;
+  --fs-presenter-card-border: #d7e1ff;
+  --fs-presenter-card-padding: 16px;
+  --fs-presenter-card-gap: 16px;
 
   /* Cover-only composition dimensions. */
   --fs-cover-logo-width: 224px;
@@ -237,42 +241,60 @@ html.fs-cover-visible .slide-menu-button {
   z-index: 1;
 }
 
-/* The closing QR slide uses the whole canvas so its code is truly centred.
-   Only the heading retains logo clearance; the QR content starts beneath it
-   and can therefore be laid out against the full slide width safely. */
-.reveal .slides section.fs-qr-slide:not(.stack):not(.fs-cover) {
-  padding-right: 0 !important;
-  padding-left: 0 !important;
+/* Enlarge only the research QR on the closing slide; the shortcode's default
+   inline wrapper is 240px wide. */
+.reveal .slides section[data-name="Conclusion"] .quarto-qrcode {
+  width: 280px !important;
 }
-
-.reveal .slides section.fs-qr-slide > h2 {
-  box-sizing: border-box;
-  width: calc(100% - var(--fs-logo-clearance));
-}
-
-.reveal .slides section.fs-qr-slide > .fs-qr-content {
+.reveal .slides section[data-name="Conclusion"] .quarto-qrcode > svg {
   width: 100%;
-  text-align: center;
+  height: auto;
 }
 
-.reveal .slides section.fs-qr-slide > .fs-discussion-prompts {
-  width: min(880px, 70%);
-  margin: 0 auto 0.35em;
-  font-size: 0.72em;
-  text-align: left;
+/* Give presenter profiles a quiet Frankfurt-blue surface with square corners
+   and deliberate space between cards. The research QR remains unboxed. */
+.reveal .slides section[data-name="Conclusion"] .closing-thanks > .columns {
+  display: flex;
+  gap: var(--fs-presenter-card-gap);
 }
 
-.reveal .slides section.fs-qr-slide > .fs-discussion-prompts p {
-  margin: 0 0 0.2em;
+.reveal .slides section[data-name="Conclusion"] .presenter-card {
+  box-sizing: border-box;
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+  padding: var(--fs-presenter-card-padding);
+  border: 1px solid var(--fs-presenter-card-border);
+  border-radius: 0;
+  background: var(--fs-presenter-card-background);
 }
 
-.reveal .slides section.fs-qr-slide > .fs-discussion-prompts ul {
+.reveal .slides section[data-name="Conclusion"] .presenter-card > p:first-child {
   margin-top: 0;
+}
+
+.reveal .slides section[data-name="Conclusion"] .presenter-card > p:last-child {
   margin-bottom: 0;
 }
 
-.reveal .slides section.fs-qr-slide > .fs-qr-content p {
-  margin: 0.2em 0;
+/* Match ordinary slide links and quote rules to the FS brand accent. */
+.reveal .slides section a,
+.reveal .slides section a:visited {
+  color: var(--fs-brand-blue);
+}
+
+.reveal .slides section a:hover,
+.reveal .slides section a:focus-visible {
+  color: var(--fs-brand-blue);
+  text-decoration: underline;
+}
+
+.reveal .slides section blockquote {
+  border-left-color: var(--fs-brand-blue);
+}
+
+.reveal .slides section[data-name="Conclusion"] > .closing-thanks {
+  margin-top: 0.5em;
 }
 
 html,
@@ -322,6 +344,16 @@ body,
   display: block;
   margin-inline: auto;
   max-width: 100%;
+}
+
+/* Reusable utility for centering text and inline content within a column. */
+.reveal .slides .center-column,
+.reveal .slides .center-column p {
+  text-align: center;
+}
+
+.reveal .slides .center-column > .fragment {
+  margin-inline: 0 !important;
 }
 
 .reveal .slides section.level1.center {
