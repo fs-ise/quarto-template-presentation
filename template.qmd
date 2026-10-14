@@ -7,9 +7,7 @@ format:
   fs-ise-presentation-revealjs: default
 ---
 
-# Introduction {data-stack-name="Introduction"}
-
-## A focused story
+## A focused story {data-name="Introduction"}
 
 Use this template to communicate one clear idea.
 
@@ -24,9 +22,7 @@ Speaker notes are visible in presenter view. Press **S** during a presentation
 to open it.
 :::
 
-# Formatting {data-stack-name="Formatting"}
-
-## Two perspectives
+## Two perspectives {data-name="Formatting"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -64,9 +60,7 @@ $$
 
 Inline notation such as $n \ge 1$ works alongside display mathematics.
 
-# Examples {data-stack-name="Examples"}
-
-## Reproducible snippets
+## Reproducible snippets {data-name="Examples"}
 
 ```python
 def compound_growth(principal, rate, years):

@@ -1,16 +1,16 @@
-# Simplemenu
+# Embedded Simplemenu
 
-This directory embeds the
-[`quarto-simplemenu`](https://github.com/martinomagnifico/quarto-simplemenu)
-Reveal.js plugin by Martin Donath as a Quarto embedded extension. It is
-distributed under the MIT license in `LICENSE`.
+This directory vendors the official
+[`quarto-simplemenu`](https://github.com/Martinomagnifico/quarto-simplemenu)
+Quarto extension, release **v2.0.1**, commit
+[`6fa39e6aca0ec8762d463c50ebf4fda92ad997da`](https://github.com/Martinomagnifico/quarto-simplemenu/commit/6fa39e6aca0ec8762d463c50ebf4fda92ad997da).
+The upstream JavaScript and CSS are copied byte-for-byte from that revision.
+The upstream extension manifest reports version 2.0.0 in this release.
 
-Keeping the plugin below the parent extension's `_extensions` directory is
-Quarto's supported mechanism for shipping an extension dependency. Do not
-move it to the repository-level `_extensions` directory or install it as a
-separate Copier task.
+The MIT license applies; see `LICENSE`. The parent FS-ISE extension configures
+flat navigation and the footer markup, while its `custom.scss` supplies the
+FS-ISE presentation styling. Keep those customizations outside the upstream
+JavaScript and CSS.
 
-The JavaScript retains upstream Simplemenu's stack discovery behaviour, which
-accepts `data-stack-name` on either a horizontal section or one of its direct
-vertical children. The local stylesheet and footer markup adapt the plugin to
-the FS-ISE navigation design and accessible slide-number display.
+Keep this extension nested below `fs-ise-presentation/_extensions/` so Quarto
+ships it with the FS-ISE format and users do not need to install it separately.

@@ -42,7 +42,10 @@ def test_copier_project_and_answers(copier_project):
     assert not (copier_project / "copier-template").exists()
     presentation = (copier_project / "presentation.qmd").read_text(encoding="utf-8")
     assert "{{< qrcode https://example.com >}}" in presentation
-    assert "data-stack-name" in presentation
+    assert '## Welcome {data-name="Introduction"}' in presentation
+    assert '## Your main idea {data-name="Main idea"}' in presentation
+    assert '## Thank you! {data-name="Conclusion" .fs-qr-slide}' in presentation
+    assert "data-stack-name" not in presentation
 
 
 def test_copier_post_generation_installs_extensions(copier_project):

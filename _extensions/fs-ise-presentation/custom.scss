@@ -10,17 +10,18 @@ $presentation-font-size-root: 36px;
   --fs-brand-blue: #002EFF;
   --fs-brand-black: #000000;
   --fs-font-family: "Source Sans Pro", sans-serif;
-  --fs-body-font-size: 36px;
-  --fs-heading-1-size: 72px;
-  --fs-heading-2-size: 54px;
-  --fs-heading-3-size: 44px;
-  --fs-slide-padding-block-start: 48px;
-  --fs-slide-padding-inline: 64px;
-  --fs-footer-clearance: 92px;
+  --fs-body-font-size: 28px;
+  --fs-heading-1-size: 56px;
+  --fs-heading-2-size: 42px;
+  --fs-heading-3-size: 35px;
+  --fs-slide-padding-block-start: 0px;
+  --fs-slide-padding-inline-start: 0px;
+  --fs-slide-padding-inline-end: 64px;
+  --fs-footer-clearance: 78px;
   --fs-heading-spacing: 0 0 0.65em;
   --fs-logo-width: 152.6px;
-  --fs-logo-inset-top: 24px;
-  --fs-logo-inset-right: 32px;
+  --fs-logo-inset-top: 0px;
+  --fs-logo-inset-right: 0px;
   --fs-logo-clearance: 210px;
 
   /* Cover-only composition dimensions. */
@@ -35,6 +36,7 @@ $presentation-font-size-root: 36px;
   --fs-cover-author-size: 32px;
   --fs-cover-date-size: 28px;
   --fs-edge-inset: 12px;
+  --fs-menu-band-bottom: 7px;
 }
 
 /* The title partial owns the cover layout, keeping these rules isolated from
@@ -165,8 +167,8 @@ html.fs-cover-visible .slide-menu-button {
    heading reserves a clear area under the upper-right brand mark. */
 .reveal .slides section:not(.stack):not(.fs-cover) {
   box-sizing: border-box;
-  padding: var(--fs-slide-padding-block-start) var(--fs-slide-padding-inline)
-    var(--fs-footer-clearance) !important;
+  padding: var(--fs-slide-padding-block-start) var(--fs-slide-padding-inline-end)
+    var(--fs-footer-clearance) var(--fs-slide-padding-inline-start) !important;
 }
 
 .reveal .slides section:not(.stack):not(.fs-cover) > :is(h1, h2, h3) {
@@ -180,6 +182,38 @@ html.fs-cover-visible .slide-menu-button {
 }
 .reveal h3 { font-size: var(--fs-heading-3-size); }
 .reveal .slides { font-size: var(--fs-body-font-size); }
+
+/* Size Quarto's copyable-code wrappers along with the code surface so their
+   background and copy control follow the content instead of spanning the slide. */
+.reveal .slides .code-copy-outer-scaffold,
+.reveal .slides .code-copy-outer-scaffold > .sourceCode {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.reveal .slides .code-copy-outer-scaffold > .sourceCode {
+  box-sizing: border-box;
+  padding: 3px;
+  border: 1px solid #b3b3b3;
+  border-radius: 3px;
+}
+
+.reveal .slides .code-copy-outer-scaffold {
+  margin-inline: 0 auto;
+}
+
+/* Slightly enlarge fenced code without changing inline code. */
+.reveal .slides pre {
+  font-size: 0.7em;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+}
+
+.reveal .slides .code-copy-outer-scaffold pre {
+  border: 0;
+  box-shadow: none;
+}
 
 /* The decorative mark is attached to every content slide, so Reveal's native
    slide transform scales its size and insets together with all slide content. */
@@ -247,6 +281,7 @@ body,
 
 .reveal .progress span {
   height: 100%;        /* ensure the inner bar fills the new height */
+  background-color: var(--fs-brand-blue);
 }
 
 /* Keep menus and overlays above slide content. */
@@ -296,11 +331,124 @@ body,
 }
 
 .reveal .slide-menu-button {
-  /* Quarto's existing Reveal menu control remains the left-hand footer
-     action; lift it above Simplemenu rather than replacing its behaviour. */
-  bottom: 18px;
-  left: 24px;
+  /* Give the burger a square hit area with equal top, bottom, and left insets
+     in Simplemenu's 2.4-em band. Match its font size to Simplemenu so it scales
+     with the responsive footer. */
+  --fs-menu-control-size: 2.2rem;
+  --fs-menu-icon-half-size: 1.1rem;
+  bottom: calc(var(--fs-menu-band-bottom) + 1.2em - var(--fs-menu-icon-half-size)) !important;
+  font-size: clamp(16px, var(--r-main-font-size) * var(--simplemenu-scale, 0.75), 80px) !important;
+  left: calc(1.2em - var(--fs-menu-icon-half-size)) !important;
   right: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--fs-menu-control-size);
+  height: var(--fs-menu-control-size);
+  line-height: 1;
   margin: 0;
   z-index: 60;
+}
+
+.reveal .slide-menu-button .fas::before {
+  display: block;
+  vertical-align: 0 !important;
+}
+
+@media screen and (max-width: 800px) {
+  .reveal .slide-menu-button {
+    --fs-menu-control-size: 1.3rem;
+    --fs-menu-icon-half-size: 0.65rem;
+  }
+}
+
+/* FS-ISE navigation skin. Simplemenu supplies the navigation behaviour and
+   native slide-number integration; all presentation-specific layout remains
+   here so the vendored upstream JavaScript and stylesheet stay untouched. */
+.reveal .menubar {
+  align-items: center;
+  background: #fff;
+  border-top: 2px solid var(--fs-brand-blue);
+  bottom: var(--fs-menu-band-bottom);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(5em, 1fr) auto minmax(5em, 1fr);
+  left: 0;
+  min-height: 2.4em;
+  padding: 0.25em 1.5em;
+  pointer-events: none;
+  right: 0;
+  transform: none !important;
+  transition: none;
+  z-index: 30;
+}
+
+/* The upstream `.menubar.bottom` rule pins the bar to the reveal viewport's
+   edge; keep the FS footer clear of Reveal's seven-pixel progress indicator. */
+.reveal .menubar.bottom {
+  bottom: var(--fs-menu-band-bottom);
+}
+
+/* The explicit FS-ISE border is the sole menu-band separator. The upstream
+   decorative rules otherwise add a lower-opacity currentColor line. */
+.reveal .menubar::before,
+.reveal .menubar::after {
+  content: none;
+}
+
+.reveal .menubar .menu {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 1.8em;
+  grid-column: 2;
+  justify-content: center;
+  justify-self: center;
+  list-style: none;
+  margin: 0;
+  max-width: calc(100% - 10em);
+  padding: 0;
+  width: max-content;
+}
+
+.reveal .menubar .menu li {
+  flex: 0 0 auto;
+}
+
+.reveal .menubar .menu a {
+  color: #333;
+  display: block;
+  padding: 0.15em 0;
+  pointer-events: auto;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.reveal .menubar .menu li.active a {
+  box-shadow: inset 0 -0.12em 0 var(--fs-brand-blue);
+  color: var(--fs-brand-blue);
+  font-weight: 700;
+  opacity: 1;
+}
+
+/* Simplemenu moves Reveal's own counter into this grid cell at ready time. */
+.reveal .menubar .slide-number {
+  background: transparent;
+  color: #003366;
+  font-size: 1em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  grid-column: 3;
+  height: auto !important;
+  justify-self: end;
+  margin-left: 1.8em;
+  margin-right: -0.75em;
+  min-width: 4em;
+  padding: 0 !important;
+  position: static !important;
+  right: auto !important;
+  text-align: right;
+  white-space: nowrap;
 }

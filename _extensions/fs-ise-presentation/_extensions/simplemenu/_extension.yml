@@ -1,17 +1,21 @@
 title: Simplemenu
-author: Martin Donath
+author:  Martijn De Jongh (Martino)
 version: 2.0.0
-quarto-required: ">=1.2.0"
+quarto-required: ">=1.2.198"
 contributes:
   revealjs-plugins:
-    - name: Simplemenu
-      script:
-        - simplemenu.js
-      stylesheet:
-        - simplemenu.css
+    -
+      name: Simplemenu
+      script: simplemenu.js
+      stylesheet: simplemenu.css
       config:
         simplemenu:
+          menubarclass: "menubar"
+          menuclass: "menu"
+          activeclass: "active"
+          activeelement: "li"
+          flat: false
           barhtml:
-            header: ""
-            footer: "<nav class='menubar' aria-label='Presentation sections'><ul class='menu'></ul><span class='menu-slide-number' aria-label='Slide number'></span></nav>"
-          scale: 0.7
+              header: ""
+              footer: ""
+          scale: 0.67

@@ -25,7 +25,46 @@ To add the presentation format to an existing Quarto project:
 quarto add fs-ise/quarto-template-presentation
 ```
 
-Use `format: fs-ise-presentation-revealjs` in the document's YAML metadata. Simplemenu is included in the extension.
+Use `format: fs-ise-presentation-revealjs` in the document's YAML metadata.
+Simplemenu is included in the extension and pinned to upstream v2.0.1
+(`6fa39e6aca0ec8762d463c50ebf4fda92ad997da`); its JavaScript and CSS are
+unmodified.
+
+## Section navigation
+
+Flat navigation is enabled by default. Make each section label a level-2
+content slide with `data-name`; later level-2 slides inherit that label until
+the next named slide. There are no separate section-divider slides:
+
+```markdown
+## Introduction {data-name="Introduction"}
+Your first content slide.
+
+## Supporting evidence
+This slide is also part of Introduction.
+
+## Recommendations {data-name="Recommendations"}
+This starts the next navigation section.
+```
+
+The FS-ISE format sets `section-divs: false` for this flat structure. To use
+Reveal vertical stacks in a document, set both options explicitly and structure
+the headings as level-1 stacks with level-2 slides. Put `data-stack-name` on the
+first level-2 slide of each stack:
+
+```yaml
+format:
+  fs-ise-presentation-revealjs:
+    section-divs: true
+    simplemenu:
+      flat: false
+```
+
+```markdown
+# Introduction
+## First content slide {data-stack-name="Introduction"}
+## Another slide in this stack
+```
 
 ## Render
 
@@ -53,6 +92,7 @@ To preview changes run
 
 ```
 quarto render template.qmd
+quarto preview template.qmd
 ```
 
 ## Update a Copier project

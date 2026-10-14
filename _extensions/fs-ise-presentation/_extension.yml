@@ -12,13 +12,23 @@ contributes:
       width: 1600
       height: 900
       lazy-load: true
-      # Simplemenu renders the single slide counter in the navigation bar.
-      slide-number: false
-      section-divs: true
+      # Simplemenu relocates Reveal's native current/total slide counter.
+      slide-number: c/t
+      # Flat Simplemenu sections are content slides, not nested section divs.
+      section-divs: false
       auto-stretch: false
       slide-level: 2
       revealjs-plugins:
         - simplemenu
+      simplemenu:
+        flat: true
+        scale: 0.7
+        # Do not inject a second copy of the stylesheet; Quarto includes the
+        # upstream stylesheet from the embedded plugin manifest.
+        csspath: false
+        barhtml:
+          header: ""
+          footer: "<nav class='menubar' aria-label='Presentation sections'><ul class='menu'></ul><div class='slide-number'></div></nav>"
       format-resources:
         # Quarto copies an individually listed extension resource by basename.
         # Listing the directory preserves `figures/` in the project and output.

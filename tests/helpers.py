@@ -60,22 +60,27 @@ def assert_resources_exist(path: Path) -> None:
 def assert_manifest(path: Path, plugin_path: Path | None = None) -> None:
     manifest = load_yaml(path)
     reveal = manifest["contributes"]["formats"]["revealjs"]
-    assert reveal.get("section-divs") is True, "section-divs must be enabled in revealjs format"
-    assert reveal.get("slide-number") is False, "Reveal's duplicate slide number must be disabled"
+    assert reveal.get("section-divs") is False, "flat navigation requires section-divs to be disabled"
+    assert reveal.get("slide-number") == "c/t", "Reveal's native current/total slide number must be enabled"
     assert reveal.get("revealjs-plugins") == ["simplemenu"], "Simplemenu must be the registered Reveal plugin"
-    assert "simplemenu" not in reveal, "Simplemenu configuration belongs in the Reveal plugin declaration"
+    simplemenu = reveal.get("simplemenu")
+    assert isinstance(simplemenu, dict), "Simplemenu must be configured under the RevealJS format"
+    assert simplemenu.get("flat") is True, "flat navigation must be the default"
+    assert simplemenu.get("scale") == 0.7
+    assert simplemenu.get("csspath") is False, "upstream CSS must be loaded only from its Quarto manifest"
+    footer = simplemenu.get("barhtml", {}).get("footer", "")
+    parser = Document()
+    parser.feed(footer)
+    assert any("menubar" in (a.get("class") or "").split() for _, a in parser.elements), "Simplemenu footer has no menubar"
+    assert any("menu" in (a.get("class") or "").split() for _, a in parser.elements), "Simplemenu footer has no menu list"
+    assert any("slide-number" in (a.get("class") or "").split() for _, a in parser.elements), "Simplemenu footer has no native slide-number target"
+    assert not any("menu-slide-number" in (a.get("class") or "").split() for _, a in parser.elements), "custom slide numbering must not replace Reveal's native counter"
 
     plugin_path = plugin_path or path.parent / "_extensions/simplemenu/_extension.yml"
     plugin_manifest = load_yaml(plugin_path)
     plugins = plugin_manifest["contributes"]["revealjs-plugins"]
     plugin = next((item for item in plugins if item.get("name") == "Simplemenu"), None)
     assert plugin is not None, "embedded Simplemenu plugin declaration is missing"
-    simplemenu = plugin.get("config", {}).get("simplemenu")
-    assert isinstance(simplemenu, dict), "Simplemenu plugin configuration is missing"
-    assert simplemenu.get("scale") == 0.7
-    footer = simplemenu.get("barhtml", {}).get("footer", "")
-    parser = Document()
-    parser.feed(footer)
-    assert any("menubar" in (a.get("class") or "").split() for _, a in parser.elements), "Simplemenu footer has no menubar"
-    assert any("menu" in (a.get("class") or "").split() for _, a in parser.elements), "Simplemenu footer has no menu list"
-    assert any("menu-slide-number" in (a.get("class") or "").split() for _, a in parser.elements), "Simplemenu footer has no slide-number container"
+    defaults = plugin.get("config", {}).get("simplemenu")
+    assert isinstance(defaults, dict), "official Simplemenu plugin defaults are missing"
+    assert defaults.get("flat") is False, "the upstream plugin defaults must remain unmodified"
