@@ -1,5 +1,9 @@
 _subdirectory: copier-template
 _answers_file: .copier-answers.yml
+_min_copier_version: "9.2.0"
+_jinja_extensions:
+  - copier_template_extensions.TemplateExtensionLoader
+  - extensions/paper_metadata.py:PaperMetadata
 _skip_if_exists:
   - presentation.qmd
 _tasks:
@@ -35,7 +39,7 @@ _message_after_copy: |
 project_name:
   type: str
   help: Name of the Quarto project
-  default: Presentation title
+  default: "{{ paper_title | default('Presentation title', true) }}"
 
 presentation_title:
   type: str
@@ -45,7 +49,7 @@ presentation_title:
 author:
   type: str
   help: Presentation author
-  default: Presenter Name
+  default: "{{ paper_author | default('Presenter Name', true) }}"
 
 subtitle:
   type: str

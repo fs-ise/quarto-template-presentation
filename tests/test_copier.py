@@ -15,6 +15,14 @@ def find_fs_extension(project):
     return matches[0].parent
 
 
+def copy_with_defaults(destination, cwd, answers=()):
+    command = ["copier", "copy", "--trust", "--defaults", "--skip-tasks"]
+    for answer in (*answers, f"extension_source={ROOT}"):
+        command.extend(("--data", answer))
+    command.extend((str(ROOT), str(destination)))
+    run(command, cwd=cwd)
+
+
 def test_copier_project_and_answers(copier_project):
     for filename in ("presentation.qmd", "_quarto.yml", "README.md", "Makefile", ".gitignore", ".copier-answers.yml"):
         assert (copier_project / filename).is_file(), f"Copier omitted {filename}"
@@ -65,6 +73,82 @@ def test_copier_project_and_answers(copier_project):
     assert "fs-qr-slide" not in presentation
     assert "fs-discussion-prompts" not in presentation
     assert "data-stack-name" not in presentation
+
+
+def test_copier_uses_paper_qmd_front_matter_defaults(artifact_root):
+    paper_repo = artifact_root / "paper-repository"
+    paper_repo.mkdir()
+    (paper_repo / "paper.qmd").write_text(
+        "\n".join([
+            "---",
+            'title: "Paper title for the conference talk"',
+            "author:",
+            '  - name: "Ada Lovelace"',
+            "  - name:",
+            '      given: "Grace"',
+            '      family: "Hopper"',
+            "---",
+            "",
+            "Paper content.",
+            "",
+        ]),
+        encoding="utf-8",
+    )
+
+    project = paper_repo / "conference-presentation"
+    copy_with_defaults(project, cwd=paper_repo)
+
+    answers = load_yaml(project / ".copier-answers.yml")
+    assert answers["project_name"] == "Paper title for the conference talk"
+    assert answers["presentation_title"] == "Paper title for the conference talk"
+    assert answers["author"] == "Ada Lovelace, Grace Hopper"
+    presentation = (project / "presentation.qmd").read_text(encoding="utf-8")
+    assert 'title: "Paper title for the conference talk"' in presentation
+    assert 'author: "Ada Lovelace, Grace Hopper"' in presentation
+
+
+def test_copier_paper_defaults_fall_back_and_remain_overridable(artifact_root):
+    plain_repo = artifact_root / "plain-repository"
+    plain_repo.mkdir()
+    fallback_project = plain_repo / "conference-presentation"
+    copy_with_defaults(fallback_project, cwd=plain_repo)
+    fallback_answers = load_yaml(fallback_project / ".copier-answers.yml")
+    assert fallback_answers["project_name"] == "Presentation title"
+    assert fallback_answers["presentation_title"] == "Presentation title"
+    assert fallback_answers["author"] == "Presenter Name"
+
+    partial_repo = artifact_root / "partial-paper-repository"
+    partial_repo.mkdir()
+    (partial_repo / "paper.qmd").write_text(
+        "\n".join(["---", 'title: "Title without author"', "---", ""]),
+        encoding="utf-8",
+    )
+    partial_project = partial_repo / "conference-presentation"
+    copy_with_defaults(partial_project, cwd=partial_repo)
+    partial_answers = load_yaml(partial_project / ".copier-answers.yml")
+    assert partial_answers["project_name"] == "Title without author"
+    assert partial_answers["author"] == "Presenter Name"
+
+    paper_repo = artifact_root / "paper-with-overrides"
+    paper_repo.mkdir()
+    (paper_repo / "paper.qmd").write_text(
+        "\n".join(["---", 'title: "Paper title"', 'author: "Paper author"', "---", ""]),
+        encoding="utf-8",
+    )
+    overridden_project = paper_repo / "conference-presentation"
+    copy_with_defaults(
+        overridden_project,
+        cwd=paper_repo,
+        answers=(
+            "project_name=Conference project",
+            "presentation_title=Conference talk title",
+            "author=Conference presenter",
+        ),
+    )
+    overridden_answers = load_yaml(overridden_project / ".copier-answers.yml")
+    assert overridden_answers["project_name"] == "Conference project"
+    assert overridden_answers["presentation_title"] == "Conference talk title"
+    assert overridden_answers["author"] == "Conference presenter"
 
 
 def test_copier_post_generation_installs_extensions(copier_project):

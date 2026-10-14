@@ -15,7 +15,28 @@ copier copy --trust gh:fs-ise/quarto-template-presentation my-presentation
 cd my-presentation
 ```
 
-Copier prompts for the presentation title, author, and optional subtitle. The required Quarto extensions are installed automatically.
+The Copier metadata hook requires `copier-template-extensions` in the same
+Python environment as Copier. For example:
+
+```bash
+pipx inject copier copier-template-extensions
+```
+
+For an isolated Copier installation managed by `uv`, install both together:
+
+```bash
+uv tool install copier --with copier-template-extensions
+```
+
+When run from a paper repository, the hook looks for `paper.qmd` in the
+destination and its parent directories up to the repository root. Its YAML
+front matter `title` and `author` become editable defaults. Multiple authors
+are joined by commas. Without usable metadata, Copier keeps its regular
+defaults. The generated presentation is a separate child directory; the paper
+files are only read, not modified.
+Copier still prompts for the presentation title, author, and optional subtitle,
+so you can replace the suggested values. The required Quarto extensions are
+installed automatically.
 
 ## Alternatively: Install the Quarto extension
 
