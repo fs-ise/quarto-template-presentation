@@ -77,12 +77,10 @@ runtime or data dependencies.
 
 ::: {.fs-centered-diagram}
 ```{mermaid}
-flowchart LR
+flowchart TD
     A[Research question] --> B[Literature search]
-    B --> C[Deduplication]
-    C --> D[Screening]
-    D --> E[Eligibility assessment]
-    E --> F[Evidence synthesis]
+    B --> C[Screening]
+    C --> D[Evidence synthesis]
 ```
 :::
 
