@@ -107,6 +107,51 @@ def test_copier_uses_paper_qmd_front_matter_defaults(artifact_root):
     assert 'author: "Ada Lovelace, Grace Hopper"' in presentation
 
 
+def test_copier_uses_paper_md_front_matter_defaults(artifact_root):
+    paper_repo = artifact_root / "markdown-paper-repository"
+    paper_repo.mkdir()
+    (paper_repo / "paper.md").write_text(
+        "\n".join([
+            "---",
+            'author: "Geßler, Anna and Schnickmann, Karl and Wagner, Gerit"',
+            "title: 'Advancing Literature Review Automation through API-Based Searches: Design of an Independent Emulator'",
+            "---",
+            "",
+            "Paper content.",
+            "",
+        ]),
+        encoding="utf-8",
+    )
+
+    project = paper_repo / "conference-presentation"
+    copy_with_defaults(project, cwd=paper_repo)
+
+    answers = load_yaml(project / ".copier-answers.yml")
+    assert answers["project_name"] == "Advancing Literature Review Automation through API-Based Searches: Design of an Independent Emulator"
+    assert answers["presentation_title"] == answers["project_name"]
+    assert answers["author"] == "Geßler, Anna and Schnickmann, Karl and Wagner, Gerit"
+
+
+def test_paper_qmd_takes_precedence_over_paper_md(artifact_root):
+    paper_repo = artifact_root / "paper-with-both-formats"
+    paper_repo.mkdir()
+    (paper_repo / "paper.qmd").write_text(
+        "\n".join(["---", 'title: "QMD title"', 'author: "QMD author"', "---", ""]),
+        encoding="utf-8",
+    )
+    (paper_repo / "paper.md").write_text(
+        "\n".join(["---", 'title: "Markdown title"', 'author: "Markdown author"', "---", ""]),
+        encoding="utf-8",
+    )
+
+    project = paper_repo / "conference-presentation"
+    copy_with_defaults(project, cwd=paper_repo)
+
+    answers = load_yaml(project / ".copier-answers.yml")
+    assert answers["project_name"] == "QMD title"
+    assert answers["author"] == "QMD author"
+
+
 def test_copier_paper_defaults_fall_back_and_remain_overridable(artifact_root):
     plain_repo = artifact_root / "plain-repository"
     plain_repo.mkdir()

@@ -28,12 +28,13 @@ For an isolated Copier installation managed by `uv`, install both together:
 uv tool install copier --with copier-template-extensions
 ```
 
-When run from a paper repository, the hook looks for `paper.qmd` in the
-destination and its parent directories up to the repository root. Its YAML
-front matter `title` and `author` become editable defaults. Multiple authors
-are joined by commas. Without usable metadata, Copier keeps its regular
-defaults. The generated presentation is a separate child directory; the paper
-files are only read, not modified.
+When run from a paper repository, the hook looks for `paper.qmd` or `paper.md`
+in the destination and its parent directories up to the repository root. If
+both exist at the same location, `paper.qmd` takes precedence. The chosen
+document's YAML front matter `title` and `author` become editable defaults.
+Multiple authors are joined by commas. Without usable metadata, Copier keeps
+its regular defaults. The generated presentation is a separate child directory;
+the paper files are only read, not modified.
 Copier still prompts for the presentation title, author, and optional subtitle,
 so you can replace the suggested values. The required Quarto extensions are
 installed automatically.

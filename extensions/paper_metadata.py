@@ -54,11 +54,12 @@ def _parse_front_matter(path: Path) -> dict[str, Any]:
     return metadata if isinstance(metadata, dict) else {}
 
 
-def _find_paper_qmd(destination: Path) -> Path | None:
+def _find_paper_document(destination: Path) -> Path | None:
     for directory in (destination, *destination.parents):
-        paper_qmd = directory / "paper.qmd"
-        if paper_qmd.is_file():
-            return paper_qmd
+        for filename in ("paper.qmd", "paper.md"):
+            paper_document = directory / filename
+            if paper_document.is_file():
+                return paper_document
         if (directory / ".git").exists():
             break
     return None
@@ -87,11 +88,11 @@ class PaperMetadata(ContextHook):
 
     @staticmethod
     def _read_paper_metadata(destination: Path) -> dict[str, str | None]:
-        paper_qmd = _find_paper_qmd(destination)
-        if paper_qmd is None:
+        paper_document = _find_paper_document(destination)
+        if paper_document is None:
             return {"paper_title": None, "paper_author": None}
 
-        metadata = _parse_front_matter(paper_qmd)
+        metadata = _parse_front_matter(paper_document)
         title = metadata.get("title")
         return {
             "paper_title": title.strip() if isinstance(title, str) and title.strip() else None,
