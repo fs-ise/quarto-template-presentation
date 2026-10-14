@@ -126,6 +126,14 @@ $presentation-font-size-root: 36px;
   text-align: left;
 }
 
+.reveal .slides section.fs-cover .author-name {
+  font-weight: 700;
+}
+
+.reveal .slides section.fs-cover .affiliation {
+  font-weight: 400;
+}
+
 .reveal .slides section.fs-cover .date {
   width: 100%;
   margin: 0;

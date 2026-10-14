@@ -1,6 +1,54 @@
-import pytest
+from html.parser import HTMLParser
 
+import pytest
+import yaml
+
+from conftest import run
 from helpers import assert_resources_exist, elements
+
+
+class TitleAuthorParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.lines = []
+        self.current = None
+        self.target = None
+
+    def handle_starttag(self, tag, attrs):
+        classes = set(dict(attrs).get("class", "").split())
+        if tag == "p" and "author" in classes:
+            self.current = {"name": "", "affiliation": "", "text": ""}
+            self.target = "text"
+        elif self.current is not None and tag == "strong" and "author-name" in classes:
+            self.target = "name"
+        elif self.current is not None and tag == "span" and "affiliation" in classes:
+            self.target = "affiliation"
+
+    def handle_data(self, data):
+        if self.current is None:
+            return
+        self.current["text"] += data
+        if self.target in ("name", "affiliation"):
+            self.current[self.target] += data
+
+    def handle_endtag(self, tag):
+        if self.current is None:
+            return
+        if tag == "p":
+            self.lines.append(self.current)
+            self.current = None
+            self.target = None
+        elif tag in ("strong", "span"):
+            self.target = "text"
+
+
+def title_author_lines(html):
+    parser = TitleAuthorParser()
+    parser.feed(html.read_text(encoding="utf-8"))
+    return [
+        tuple(" ".join(line[key].split()) for key in ("name", "affiliation", "text"))
+        for line in parser.lines
+    ]
 
 
 def assert_rendered_presentation(html):
@@ -30,11 +78,80 @@ def test_generated_project_rendering(generated_html):
     assert_rendered_presentation(generated_html)
     rendered = generated_html.read_text(encoding="utf-8")
     assert "https://example.com" in rendered
+    assert title_author_lines(generated_html) == [("CI", "", "CI")]
     project = generated_html.parents[1]
     for asset in ("fs_logo_blue.svg", "fs_logo_blue_content.svg", "title_background.png"):
         assert (project / "figures" / asset).is_file()
         assert (project / "_site/figures" / asset).is_file()
         assert not (project / asset).exists(), f"Quarto flattened {asset} into project root"
+
+
+@pytest.mark.integration
+def test_title_slide_author_metadata_rendering(canonical_html):
+    project = canonical_html.parent
+    affiliation = "Frankfurt School of Finance & Management"
+    cases = [
+        ("simple-string", "Gerit Wagner", [("Gerit Wagner", "", "Gerit Wagner")]),
+        (
+            "structured-with-affiliation",
+            [{"name": {"literal": "Gerit Wagner"}, "affiliations": [{"name": affiliation}]}],
+            [("Gerit Wagner", affiliation, f"Gerit Wagner, {affiliation}")],
+        ),
+        (
+            "structured-without-affiliation",
+            [{"name": {"literal": "Gerit Wagner"}}],
+            [("Gerit Wagner", "", "Gerit Wagner")],
+        ),
+        (
+            "multiple-authors",
+            [
+                {"name": {"literal": "Gerit Wagner"}, "affiliations": [{"name": affiliation}]},
+                {"name": {"literal": "Ada Lovelace"}, "affiliations": [{"name": "Analytical Engines Lab"}]},
+            ],
+            [
+                ("Gerit Wagner", affiliation, f"Gerit Wagner, {affiliation}"),
+                ("Ada Lovelace", "Analytical Engines Lab", "Ada Lovelace, Analytical Engines Lab"),
+            ],
+        ),
+        (
+            "mixed-authors-and-affiliations",
+            [
+                "Grace Hopper",
+                {
+                    "name": {"literal": "Gerit Wagner"},
+                    "affiliations": [
+                        {"name": affiliation},
+                        {"name": "Center for Data Science"},
+                    ],
+                },
+            ],
+            [
+                ("Grace Hopper", "", "Grace Hopper"),
+                (
+                    "Gerit Wagner",
+                    f"{affiliation}, Center for Data Science",
+                    f"Gerit Wagner, {affiliation}, Center for Data Science",
+                ),
+            ],
+        ),
+    ]
+
+    for case_name, author, expected in cases:
+        source = project / f"author-{case_name}.qmd"
+        metadata = {
+            "title": "Author metadata rendering",
+            "author": author,
+            "format": {"fs-ise-presentation-revealjs": "default"},
+        }
+        source.write_text(
+            "---\n"
+            + yaml.safe_dump(metadata, sort_keys=False, allow_unicode=True)
+            + "---\n\n## Content\n\nRendering test.\n",
+            encoding="utf-8",
+        )
+        run(["quarto", "render", source.name], cwd=project)
+        actual = title_author_lines(source.with_suffix(".html"))
+        assert actual == expected, f"unexpected title-slide authors for {case_name}: {actual}"
 
 
 @pytest.mark.static

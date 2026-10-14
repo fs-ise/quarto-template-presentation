@@ -15,7 +15,13 @@
   <div class="fs-cover-details">
     $if(title)$<h1 class="title">$title$</h1>$endif$
     $if(subtitle)$<p class="subtitle">$subtitle$</p>$endif$
-    $if(author)$<div class="authors">$for(author)$<p class="author">$author$</p>$endfor$</div>$endif$
+    $if(by-author)$
+    <div class="authors">
+      $for(by-author)$
+      <p class="author"><strong class="author-name">$by-author.name.literal$</strong>$if(by-author.affiliations)$, <span class="affiliation">$for(by-author.affiliations)$$it.name$$sep$, $endfor$</span>$endif$</p>
+      $endfor$
+    </div>
+    $endif$
     $if(date)$<p class="date">$date$</p>$endif$
   </div>
 </section>
