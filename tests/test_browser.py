@@ -172,11 +172,22 @@ def assert_closing_slide(page):
     assert "Research creates impact when credible evidence leads to a clear next step." in blockquotes.nth(0).inner_text()
     for quote in blockquotes.all():
         assert quote.evaluate("node => getComputedStyle(node).borderLeftColor") == "rgb(0, 46, 255)"
+    discussion_copy = left_column.locator("blockquote p, blockquote li")
+    assert discussion_copy.count() >= 3
+    assert discussion_copy.evaluate_all(
+        "nodes => nodes.every(node => getComputedStyle(node).color === 'rgb(43, 43, 43)')"
+    ), "closing-slide quote and discussion questions should use dark charcoal"
 
     research_url = "https://example.com"
-    qr = top_columns.locator(f'svg[data-qrcode-value="{research_url}"]')
     research_fragment = research_column.locator(":scope > .fragment")
     assert research_fragment.count() == 1
+    qr = top_columns.locator(f'svg[data-qrcode-value="{research_url}"]')
+    if not qr.count():
+        qrcodejs = research_fragment.locator(":scope > .qrcode")
+        assert qrcodejs.count() == 1, "research QR shortcode did not render a supported output"
+        qr_image = qrcodejs.locator(":scope > img")
+        qr = qr_image if qr_image.count() else qrcodejs.locator(":scope > canvas")
+    assert qr.count() == 1
     assert "research-card" not in (research_fragment.get_attribute("class") or "").split()
     research_surface = research_fragment.evaluate("""node => {
       const style = getComputedStyle(node);
@@ -200,7 +211,6 @@ def assert_closing_slide(page):
     assert research_heading.text_content() == "Explore the research"
     assert research_heading.locator("a").count() == 0, "research heading should be plain text"
     assert research_heading.evaluate("node => getComputedStyle(node).textAlign") == "center"
-    assert qr.count() == 1
     for label in ("Paper", "Slides"):
         assert top_columns.get_by_role("link", name=label).count() == 0, f"separate {label} link should be omitted"
 
@@ -260,7 +270,21 @@ def assert_closing_slide(page):
             assert len(github_links) == 1
             assert (github_links[0]["text"], github_links[0]["href"]) == expected_github[name]
         assert all(link["text"] != "LinkedIn" for link in links)
-        assert card.locator("a").evaluate_all(
+        email_style = card.locator('a[href^="mailto:"]').evaluate("""node => {
+          const style = getComputedStyle(node);
+          return {
+            color: style.color,
+            fontSize: parseFloat(style.fontSize),
+            parentFontSize: parseFloat(getComputedStyle(node.parentElement).fontSize),
+            fontWeight: style.fontWeight,
+            textDecoration: style.textDecorationLine
+          };
+        }""")
+        assert email_style["color"] == "rgb(61, 79, 122)"
+        assert email_style["fontSize"] == pytest.approx(email_style["parentFontSize"] * 0.88, abs=0.1)
+        assert email_style["fontWeight"] == "400"
+        assert email_style["textDecoration"] == "none"
+        assert card.locator('a:not([href^="mailto:"])').evaluate_all(
             "nodes => nodes.every(node => getComputedStyle(node).color === 'rgb(0, 46, 255)')"
         )
     assert top_columns.locator("a[href^='mailto:']").count() == 0
@@ -348,13 +372,41 @@ def assert_closing_slide(page):
     heading_box = research_heading.bounding_box()
     canvas_box = page.locator(".reveal .slides").bounding_box()
     research_column_box = research_column.bounding_box()
-    assert qr_box and heading_box and canvas_box and research_column_box
-    assert qr_box["width"] >= 270 * canvas_box["width"] / 1600, "QR code was not enlarged for scanning"
+    slide_box = final_slide.bounding_box()
+    logo_box = final_slide.evaluate("""slide => {
+      const rect = slide.getBoundingClientRect();
+      const style = getComputedStyle(slide, "::before");
+      const scale = Reveal.getScale();
+      const width = parseFloat(style.width) * scale;
+      const ratio = 159.974 / 58.162;
+      const height = width / ratio;
+      const top = rect.top + parseFloat(style.top) * scale;
+      const right = rect.right - parseFloat(style.right) * scale;
+      return {left: right - width, right, top, bottom: top + height};
+    }""")
+    assert qr_box and heading_box and canvas_box and research_column_box and slide_box
+    assert qr_box["width"] == pytest.approx(380 * canvas_box["width"] / 1600, abs=2), (
+        "QR code should render at the enlarged 380px logical width"
+    )
     column_center = research_column_box["x"] + research_column_box["width"] / 2
     qr_center = qr_box["x"] + qr_box["width"] / 2
     heading_center = heading_box["x"] + heading_box["width"] / 2
     assert qr_center == pytest.approx(column_center, abs=2), "QR code is not centered in its column"
     assert heading_center == pytest.approx(column_center, abs=2), "research heading is not centered in its column"
+    assert qr_box["y"] >= heading_box["y"] + heading_box["height"] - 1, (
+        "QR code should remain directly below its heading"
+    )
+    assert qr_box["x"] >= slide_box["x"] - 1
+    assert qr_box["x"] + qr_box["width"] <= slide_box["x"] + slide_box["width"] + 1
+    assert qr_box["y"] >= slide_box["y"] - 1
+    assert qr_box["y"] + qr_box["height"] <= slide_box["y"] + slide_box["height"] + 1
+    overlaps_logo = not (
+        qr_box["x"] + qr_box["width"] <= logo_box["left"]
+        or logo_box["right"] <= qr_box["x"]
+        or qr_box["y"] + qr_box["height"] <= logo_box["top"]
+        or logo_box["bottom"] <= qr_box["y"]
+    )
+    assert not overlaps_logo, "enlarged QR code overlaps the content logo"
 
 
 def assert_simplemenu_layout(page):
@@ -415,6 +467,53 @@ def assert_simplemenu_layout(page):
             a, b = item["box"], other["box"]
             overlaps = not (a["right"] <= b["left"] or b["right"] <= a["left"] or a["bottom"] <= b["top"] or b["bottom"] <= a["top"])
             assert not overlaps, f"Simplemenu elements overlap: {item['name']} and {other['name']}"
+
+
+@pytest.mark.browser
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "viewport",
+    [{"width": 1600, "height": 900}, {"width": 800, "height": 450}],
+    ids=["1600x900", "800x450"],
+)
+def test_qrcodejs_image_is_centered_in_research_column(canonical_html, viewport):
+    with server(canonical_html.parent) as origin, sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        page = browser.new_page(viewport=viewport)
+        page.goto(f"{origin}/{canonical_html.name}", wait_until="networkidle")
+        page.wait_for_function("window.Reveal && Reveal.isReady()")
+        page.evaluate("Reveal.slide(Reveal.getHorizontalSlides().length - 1)")
+        page.wait_for_timeout(100)
+
+        column = page.locator("section.present .center-column")
+        fragment = column.locator(":scope > .fragment")
+        fragment.evaluate("""node => {
+          node.querySelector('.quarto-qrcode')?.remove();
+          const qr = document.createElement('div');
+          qr.className = 'qrcode';
+          const image = document.createElement('img');
+          image.alt = 'Scan me!';
+          image.width = 128;
+          image.height = 128;
+          image.style.display = 'block';
+          image.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+          qr.append(image);
+          node.append(qr);
+        }""")
+        page.evaluate("Reveal.nextFragment()")
+        qr_image = column.locator(":scope > .fragment > .qrcode > img")
+        qr_image.wait_for(state="visible")
+
+        column_box = column.bounding_box()
+        image_box = qr_image.bounding_box()
+        scale = page.evaluate("Reveal.getScale()")
+        assert column_box and image_box
+        assert image_box["width"] == pytest.approx(380 * scale, abs=2)
+        assert image_box["x"] + image_box["width"] / 2 == pytest.approx(
+            column_box["x"] + column_box["width"] / 2,
+            abs=2,
+        ), "jmbuhr QR image is not centered in its column"
+        browser.close()
 
 
 @pytest.mark.browser

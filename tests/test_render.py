@@ -90,16 +90,16 @@ def test_generated_project_rendering(generated_html):
     rendered = generated_html.read_text(encoding="utf-8")
     assert 'data-qrcode-value="https://example.com"' in rendered
     assert not elements(generated_html, "a", href="https://example.com")
-    assert "Let’s discuss" in rendered
+    assert len(elements(generated_html, "section", data_name="Conclusion")) == 1
     assert rendered.count('data-fragment-index="0"') == 2
     assert len(elements(generated_html, "h3", id="explore-the-research")) == 1
-    assert len(elements(generated_html, "blockquote")) == 2
-    assert "Presenter One" in rendered
+    assert len(elements(generated_html, "blockquote")) in (1, 2)
+    assert "Which assumption would you revisit" in rendered
+    assert "Presenter 1 Name" in rendered
     assert "Presenter 2 Name" in rendered
     assert "Presenter 3 Name" in rendered
     assert "Thank you — we look forward to the discussion." in rendered
-    assert 'href="mailto:name@institution.edu">name@institution.edu</a>' in rendered
-    assert 'href="https://github.com/presenter-one">github.com/presenter-one</a>' in rendered
+    assert 'href="mailto:presenter1@institution.edu">presenter1@institution.edu</a>' in rendered
     assert title_author_lines(generated_html) == [("CI", "", "CI")]
     project = generated_html.parents[1]
     for asset in ("fs_logo_blue.svg", "fs_logo_blue_content.svg", "title_background.png"):

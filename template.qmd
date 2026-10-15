@@ -98,7 +98,7 @@ flowchart TD
 :::
 
 ::: {.column .center-column width="35%"}
-:::: {.fragment data-fragment-index="0"}
+:::: {.fragment data-fragment-index="0" style="margin-bottom:-100px;"}
 ### Explore the research
 
 {{< qrcode https://example.com >}}
@@ -110,7 +110,7 @@ flowchart TD
 ::: {.fragment .closing-thanks data-fragment-index="0"}
 **Thank you — we look forward to the discussion.**
 
-<br><br>
+<br>
 
 :::: {.columns}
 ::: {.column .presenter-card width="33%"}

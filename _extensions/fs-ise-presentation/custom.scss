@@ -27,6 +27,7 @@ $presentation-font-size-root: 36px;
   --fs-presenter-card-border: #d7e1ff;
   --fs-presenter-card-padding: 16px;
   --fs-presenter-card-gap: 16px;
+  --fs-research-qr-size: 380px;
 
   /* Cover-only composition dimensions. */
   --fs-cover-logo-width: 224px;
@@ -241,14 +242,23 @@ html.fs-cover-visible .slide-menu-button {
   z-index: 1;
 }
 
-/* Enlarge only the research QR on the closing slide; the shortcode's default
-   inline wrapper is 240px wide. */
+/* Size the SVG-based shortcode used by the bundled offline example. */
 .reveal .slides section[data-name="Conclusion"] .quarto-qrcode {
-  width: 280px !important;
+  width: var(--fs-research-qr-size) !important;
 }
 .reveal .slides section[data-name="Conclusion"] .quarto-qrcode > svg {
   width: 100%;
   height: auto;
+}
+
+/* The jmbuhr shortcode emits a full-width .qrcode div with a block image;
+   center and size that rendered image (and the canvas fallback) explicitly. */
+.reveal .slides section[data-name="Conclusion"] .center-column .qrcode :is(img, canvas) {
+  display: block;
+  width: var(--fs-research-qr-size);
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
 }
 
 /* Give presenter profiles a quiet Frankfurt-blue surface with square corners
@@ -287,6 +297,24 @@ html.fs-cover-visible .slide-menu-button {
 .reveal .slides section a:focus-visible {
   color: var(--fs-brand-blue);
   text-decoration: underline;
+}
+
+/* Keep the closing-slide takeaway and discussion prompts prominent without
+   changing their existing typography or the Frankfurt-blue quote rule. */
+.reveal .slides section[data-name="Conclusion"] blockquote {
+  color: #2B2B2B;
+}
+
+/* Presenter email addresses remain actionable but sit below the discussion
+   copy in visual emphasis. Keep this override limited to mailto links. */
+.reveal .slides section[data-name="Conclusion"] .presenter-card a[href^="mailto:"],
+.reveal .slides section[data-name="Conclusion"] .presenter-card a[href^="mailto:"]:visited,
+.reveal .slides section[data-name="Conclusion"] .presenter-card a[href^="mailto:"]:hover,
+.reveal .slides section[data-name="Conclusion"] .presenter-card a[href^="mailto:"]:focus-visible {
+  color: #3D4F7A;
+  font-size: 0.88em;
+  font-weight: 400;
+  text-decoration: none;
 }
 
 .reveal .slides section blockquote {
