@@ -424,6 +424,11 @@ body,
   vertical-align: 0 !important;
 }
 
+/* Keep the menu button's hit area in place, but remove its visible icon. */
+.reveal .slide-menu-button .fas {
+  visibility: hidden;
+}
+
 @media screen and (max-width: 800px) {
   .reveal .slide-menu-button {
     --fs-menu-control-size: 1.3rem;

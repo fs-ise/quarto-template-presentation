@@ -605,8 +605,16 @@ def test_presentation_observable_behaviour(canonical_html, viewport):
             menu_button = page.locator(".slide-menu-button")
             assert menu_button.is_visible(), "Reveal menu button is hidden behind the footer"
             assert menu_button.evaluate("node => getComputedStyle(node).pointerEvents !== 'none'")
+            menu_icon = menu_button.locator("i.fas")
+            assert menu_icon.count() == 1, "Reveal menu button icon markup changed"
+            assert menu_icon.evaluate("node => getComputedStyle(node).visibility") == "hidden", (
+                "Reveal hamburger icon should be visually hidden"
+            )
             menu_button.click()
             assert page.locator(".slide-menu").is_visible(), "Reveal menu did not open"
+            page.keyboard.press("Escape")
+            page.keyboard.press("m")
+            assert page.locator(".slide-menu").is_visible(), "Reveal menu did not open with the M shortcut"
             page.keyboard.press("Escape")
             introduction = page.locator(".menubar .menu li", has_text="Introduction")
             assert "active" in (introduction.get_attribute("class") or "").split(), "Introduction is not the active section"
