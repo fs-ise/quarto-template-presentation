@@ -11,6 +11,8 @@ format:
 
 Use this template to communicate one clear idea.
 
+Evidence should shape [evidence-led decisions]{.fragment .custom .highlight-black}.
+
 ::: {.incremental}
 - Begin with the question your audience cares about.
 - Support the answer with evidence.

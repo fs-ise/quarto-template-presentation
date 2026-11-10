@@ -196,6 +196,19 @@ html.fs-cover-visible .slide-menu-button {
 .reveal h3 { font-size: var(--fs-heading-3-size); }
 .reveal .slides { font-size: var(--fs-body-font-size); }
 
+/* Reveal normally dims or hides inactive fragments. This fragment stays fully
+   visible and changes from grey to black as it is revealed. */
+.reveal .slides .fragment.highlight-black {
+  color: #aaa;
+  opacity: 1;
+  transition: color 0.3s;
+  visibility: inherit;
+}
+
+.reveal .slides .fragment.highlight-black.visible {
+  color: #000;
+}
+
 /* Size Quarto's copyable-code wrappers along with the code surface so their
    background and copy control follow the content instead of spanning the slide. */
 .reveal .slides .code-copy-outer-scaffold,

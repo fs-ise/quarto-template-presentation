@@ -36,6 +36,7 @@ Animate SVG diagrams using **sequential SVG snapshots and Reveal.js fragments**,
 - Use Reveal.js fragment classes (`fragment`, `fade-out`, `current-visible`) and synchronized `data-fragment-index` values to transition between states.
 - Keep SVG dimensions, alignment, and layout consistent to avoid visual jumps.
 - Prefer this approach for progressively revealing diagram elements, relationships, or conceptual changes.
+- Use Reveal.js fragments for progressive text disclosure; `.highlight-black` keeps text visible while highlighting it grey-to-black.
 
 **Reference:** [Session 9 – Spohrer et al. example](https://github.com/fs-ise/machine-learning-for-big-data/blob/main/slides/session_09.qmd).
 

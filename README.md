@@ -88,6 +88,12 @@ format:
 ## Another slide in this stack
 ```
 
+## Animation and fragments
+
+Use Reveal.js fragments for progressive disclosure. For example,
+`[evidence-led decisions]{.fragment .custom .highlight-black}` remains visible
+in grey until revealed, then transitions to black and stays black on later steps.
+
 ## Render
 
 From a Copier-generated project:
